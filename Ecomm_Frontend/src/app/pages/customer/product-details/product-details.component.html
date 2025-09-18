@@ -1,0 +1,93 @@
+<div *ngIf="isLoading" class="d-flex justify-content-center align-items-center vh-50 bg-light">
+  <div class="spinner-border text-primary" style="width: 3rem; height: 3rem;" role="status">
+    <span class="visually-hidden">Loading...</span>
+  </div>
+</div>
+
+<div *ngIf="!isLoading && product" class="container py-5">
+  <!-- Alert Message -->
+  <div *ngIf="message" class="alert mb-4 fade show" [ngClass]="{'alert-success': messageType === 'success', 'alert-danger': messageType === 'error'}" role="alert">
+    {{ message }}
+  </div>
+
+  <!-- Product Card -->
+  <div class="card border-0 shadow-lg rounded-4 overflow-hidden">
+    <div class="row g-0">
+      <!-- Product Images -->
+      <div class="col-md-6 bg-light p-4">
+        <div class="d-flex flex-column align-items-center">
+          <!-- Main Image -->
+          <div class="position-relative mb-4" style="width: 100%; height: 500px;">
+              <!-- Previous Button -->
+              <button
+                *ngIf="product.images && product.images.length > 0"
+                class="btn btn-white rounded-circle position-absolute top-50 start-0 translate-middle-y shadow-sm"
+                (click)="prevImage()"
+                [disabled]="currentImageIndex === 0"
+                style="width: 45px; height: 45px; z-index: 10;">
+                <i class="bi bi-chevron-left fs-5"></i>
+              </button>
+              <!-- Main Product Image -->
+              <img
+                [src]="product.images && product.images.length > 0 ? product.images[currentImageIndex] : 'https://placehold.co/600x500/000000/FFFFFF?text=No+Image'"
+                class="img-fluid rounded-3 shadow-sm"
+                [alt]="product.name"
+                style="object-fit: contain; max-height: 100%; width: 100%;">
+              <!-- Next Button -->
+              <button
+                *ngIf="product.images && product.images.length > 0"
+                class="btn btn-white rounded-circle position-absolute top-50 end-0 translate-middle-y shadow-sm"
+                (click)="nextImage()"
+                [disabled]="currentImageIndex === product.images.length - 1"
+                style="width: 45px; height: 45px; z-index: 10;">
+                <i class="bi bi-chevron-right fs-5"></i>
+              </button>
+            </div>
+          <!-- Thumbnail Gallery -->
+          <div *ngIf="product.images && product.images.length > 1" class="d-flex gap-2 justify-content-center flex-wrap">
+            <img
+              *ngFor="let image of product.images; let i = index"
+              [src]="image"
+              class="img-thumbnail rounded-3"
+              [class.border-primary]="i === currentImageIndex"
+              (click)="selectImage(i)"
+              style="width: 80px; height: 80px; object-fit: cover; cursor: pointer;">
+          </div>
+        </div>
+      </div>
+
+      <!-- Product Details -->
+      <div class="col-md-6 p-4 p-lg-5">
+        <h1 class="display-5 fw-bold text-dark mb-3">{{ product.name }}</h1>
+        <div class="d-flex align-items-center mb-4">
+          <span class="fs-3 fw-bold text-success me-3">₹{{ product.price | number:'1.2-2' }}</span>
+          <span class="badge bg-success bg-opacity-10 text-success">In Stock: {{ product.stockQuantity }}</span>
+        </div>
+        <hr class="my-4">
+        <p class="lead text-muted mb-4">{{ product.description }}</p>
+        <div class="d-flex align-items-center mb-4">
+          <label for="quantity" class="form-label me-3 fw-bold">Quantity:</label>
+          <input
+            type="number"
+            id="quantity"
+            class="form-control text-center border-2 border-primary rounded-3"
+            [(ngModel)]="quantity"
+            (input)="onQuantityChange($event)"
+            min="1"
+            [max]="product.stockQuantity"
+            style="width: 90px; height: 45px;">
+        </div>
+        <button
+          class="btn btn-primary btn-lg w-100 rounded-3 py-3 fw-bold"
+          [disabled]="product.stockQuantity === 0"
+          (click)="addToCart()">
+          <i class="bi bi-cart-plus me-2"></i>
+          {{ product.stockQuantity === 0 ? 'Out of Stock' : 'Add to Cart' }}
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Product Reviews -->
+  <app-product-review *ngIf="product.id" class="mt-5" [productId]="product.id"></app-product-review>
+</div>
