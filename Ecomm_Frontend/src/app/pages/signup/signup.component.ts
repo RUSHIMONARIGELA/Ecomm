@@ -7,6 +7,7 @@ import { AuthService } from '../../services/auth.service';
 import { CustomerService } from '../../services/customer.service';
 import { CustomerDTO } from '../../models/customer-models';
 import Swal from 'sweetalert2';
+import { getFriendlyError } from '../../utils/error-utils';
 
 @Component({
   selector: 'app-signup',
@@ -136,16 +137,13 @@ export class SignupComponent {
           this.loading = false;
           this.router.navigate(['/login']);
         },
-        error: (error: HttpErrorResponse) => {
+        error: (error: any) => {
           this.loading = false;
           console.error('Full signup failed:', error);
-          if (error.status === 409) {
-            this.errorMessage =
-              'Username or email already exists. Please choose another.';
-          } else if (error.error && error.error.message) {
-            this.errorMessage = `Registration failed: ${error.error.message}`;
+          if (error?.status === 409) {
+            this.errorMessage = 'Username or email already exists. Please choose another.';
           } else {
-            this.errorMessage = 'Registration failed. Please try again later.';
+            this.errorMessage = getFriendlyError(error, 'Registration failed. Please try again later.');
           }
         },
       });

@@ -58,7 +58,7 @@
                   aria-expanded="false"
                   [attr.aria-controls]="'collapse' + order.id"
                 >
-                  Order #{{ order.id }} - Placed on
+                  Order  - Placed on
                   {{ transformDate(order.orderDate) | date : "mediumDate" }} (Total: ₹{{
                     order.totalAmount | number : "1.2-2"
                   }})

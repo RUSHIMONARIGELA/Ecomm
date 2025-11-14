@@ -4,6 +4,7 @@ import { Component, inject } from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
 import { OrderDTO } from '../../../models/order-models';
 import { OrderService } from '../../../services/order.service';
+import Swal from 'sweetalert2';
 
 @Component({
   selector: 'app-order-list',
@@ -34,16 +35,16 @@ export class OrderListComponent {
         this.orders = data;
         this.loadingOrders = false;
       },
-      error: (error: HttpErrorResponse) => {
-        this.ordersError = 'Failed to load orders. Please try again.';
+      error: (error: any) => {
+        const friendly = error?.message || error?.error?.message || 'Failed to load orders. Please try again.';
+        Swal.fire({
+          icon: 'error',
+          title: 'Error loading orders',
+          text: friendly,
+        });
         this.loadingOrders = false;
-        console.error(
-          'AdminOrderListComponent: Error fetching all orders:',
-          error
-        );
-        if (error.error && error.error.message) {
-          this.ordersError = `Failed to load orders: ${error.error.message}`;
-        }
+        console.error('AdminOrderListComponent: Error fetching all orders:', error);
+        this.ordersError = friendly;
       },
     });
   }
@@ -64,38 +65,62 @@ export class OrderListComponent {
     }
   }
 
-  deleteOrder(orderId: number | undefined): void {
-    if (orderId === undefined) {
+  deleteOrder(order: OrderDTO): void {
+    if (!order || !order.id) {
       console.warn('Cannot delete order: Order ID is undefined.');
-      this.ordersError = 'Error: Order ID is missing for deletion.';
+      Swal.fire({
+        icon: "error",
+        title: "Error",
+        text: "Error: Order ID is missing for deletion."
+      });
       return;
     }
 
-    if (
-      !confirm(
-        'Are you sure you want to delete this order? This action cannot be undone.'
-      )
-    ) {
+    if (order.status !== 'DELIVERED') {
+      Swal.fire({
+        icon: "warning",
+        title: "Cannot Delete Order",
+        text: "Orders can only be deleted after they have been delivered."
+      });
       return;
     }
 
-    this.submitting = true;
-    this.ordersError = null;
-
-    this.orderService.deleteOrder(orderId).subscribe({
+    Swal.fire({
+      title: 'Are you sure?',
+      text: "This order will be permanently deleted. This action cannot be undone!",
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#d33',
+      cancelButtonColor: '#3085d6',
+      confirmButtonText: 'Yes, delete it!'
+    }).then((result) => {
+      if (result.isConfirmed) {
+        this.submitting = true;
+        this.ordersError = null;
+        
+        this.orderService.deleteOrder(order.id!).subscribe({
       next: () => {
-        console.log('Order deleted successfully:', orderId);
+        console.log('Order deleted successfully:', order.id);
         this.submitting = false;
+        Swal.fire({
+          icon: 'success',
+          title: 'Deleted!',
+          text: 'The order has been deleted successfully.'
+        });
         this.loadAllOrders();
       },
-      error: (error: HttpErrorResponse) => {
-        this.ordersError = 'Failed to delete order.';
+      error: (error: any) => {
         this.submitting = false;
         console.error('AdminOrderListComponent: Error deleting order:', error);
-        if (error.error && error.error.message) {
-          this.ordersError = `Failed to delete order: ${error.error.message}`;
-        }
+        const friendly = error?.message || error?.error?.message || 'Failed to delete order.';
+        Swal.fire({
+          icon: 'error',
+          title: 'Error deleting order',
+          text: friendly,
+        });
       },
     });
   }
+});
+}
 }

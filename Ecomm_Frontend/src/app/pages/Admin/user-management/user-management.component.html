@@ -45,8 +45,8 @@
               <button
                 class="btn btn-sm btn-outline-primary"
                 (click)="openRoleModal(user)"
-                [disabled]="user.id === currentUserId"
-                title="{{ user.id === currentUserId ? 'You cannot change your own roles' : 'Edit Roles' }}"
+                [disabled]="user.id === currentUserId || !(user.roles && (user.roles.includes('ROLE_ADMIN') || user.roles.includes('ROLE_SUPER_ADMIN')))"
+                title="{{ user.id === currentUserId ? 'You cannot change your own roles' : (!(user.roles && (user.roles.includes('ROLE_ADMIN') || user.roles.includes('ROLE_SUPER_ADMIN'))) ? 'Only admin accounts are editable' : 'Edit Roles') }}"
               >
                 <i data-lucide="edit" class="icon-small"></i> Edit Roles
               </button>
@@ -81,14 +81,15 @@
           <hr>
           <h6>Select New Roles:</h6>
           <div class="form-check" *ngFor="let roleWithoutPrefix of availableRoles">
-            <input
+              <input
               class="form-check-input"
-              type="checkbox"
+              type="radio"
+              name="roleSelection"
               [id]="'role-' + roleWithoutPrefix"
               [value]="roleWithoutPrefix"
-              [checked]="selectedRoles.includes('ROLE_' + roleWithoutPrefix)" 
-              (change)="onRoleChange(roleWithoutPrefix, $event)"
-              [disabled]="roleWithoutPrefix === 'SUPER_ADMIN' && selectedUser.id === currentUserId"
+              [checked]="selectedRoles.length > 0 && selectedRoles[0] === ('ROLE_' + roleWithoutPrefix)"
+              (change)="onRoleSelect(roleWithoutPrefix, $event)"
+              [disabled]="(roleWithoutPrefix === 'SUPER_ADMIN' && selectedUser.id === currentUserId) || !isRoleOptionAllowed(roleWithoutPrefix)"
             >
             <label class="form-check-label" [for]="'role-' + roleWithoutPrefix">
               {{ roleWithoutPrefix }}

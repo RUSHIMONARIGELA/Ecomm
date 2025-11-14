@@ -5,6 +5,7 @@ import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { OrderDTO } from '../../../models/order-models';
 import { OrderService } from '../../../services/order.service';
 import { HttpErrorResponse } from '@angular/common/http';
+import Swal from 'sweetalert2';
 
 @Component({
   selector: 'app-order-detail',
@@ -38,7 +39,12 @@ export class OrderDetailComponent {
   ngOnInit(): void {
     this.orderId = Number(this.route.snapshot.paramMap.get('id'));
     if (isNaN(this.orderId)) {
-      this.error = 'Invalid Order ID provided.';
+      // this.error = 'Invalid Order ID provided.';
+      Swal.fire({
+        icon:"error",
+        title:"oops..",
+        text:"Invalid Order ID provided."
+      });
       this.loading = false;
       return;
     }
@@ -56,7 +62,12 @@ export class OrderDetailComponent {
         this.loading = false;
       },
       error: (err: HttpErrorResponse) => {
-        this.error = 'Failed to load order details.';
+        Swal.fire({
+          icon:"error",
+          title:"oops..",
+          text:"Failed to load order details."
+        });
+        // this.error = 'Failed to load order details.';
         this.loading = false;
         console.error('AdminOrderDetailComponent: Error loading order:', err);
         if (err.status === 404) {
@@ -70,7 +81,12 @@ export class OrderDetailComponent {
 
   onUpdateOrder(): void {
     if (this.order === null || this.orderId === null) {
-      this.error = 'No order data to update.';
+      Swal.fire({
+        icon:"error",
+        title:"oops..",
+        text:"No order data to update."
+      });
+      // this.error = 'No order data to update.';
       return;
     }
 

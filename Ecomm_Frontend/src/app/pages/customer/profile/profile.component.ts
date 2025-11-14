@@ -8,6 +8,7 @@ import { CustomerService } from '../../../services/customer.service';
 import { ProfileDTO } from '../../../models/customer-models';
 import { Router } from '@angular/router';
 import Swal from 'sweetalert2';
+import { getFriendlyError } from '../../../utils/error-utils';
 
 @Component({
   selector: 'app-profile',
@@ -69,15 +70,15 @@ export class ProfileComponent implements OnInit {
               },
             ];
           }
-          Swal.fire("Existing profile loaded..");
+          // Swal.fire("Existing profile loaded..");
         },
-        error: (error: HttpErrorResponse) => {
-          if (error.status === 404) {
+        error: (error: any) => {
+          if (error?.status === 404) {
             Swal.fire({
-  icon: "error",
-  title: "Oops...",
-  text: "No existing profile found. Please create one.",
-});
+              icon: 'error',
+              title: 'Oops...',
+              text: 'No existing profile found. Please create one.',
+            });
             if (
               !this.profile.addresses ||
               this.profile.addresses.length === 0
@@ -94,11 +95,8 @@ export class ProfileComponent implements OnInit {
               ];
             }
           } else {
-            Swal.fire({
-  icon: "error",
-  title: "Oops...",
-  text: "Failed to load profile. Pleasetry again.",
-});
+            const friendly = getFriendlyError(error, 'Failed to load profile. Please try again.');
+            Swal.fire({ icon: 'error', title: 'Oops...', text: friendly });
             console.error('Error loading profile:', error);
           }
         },
@@ -150,20 +148,10 @@ export class ProfileComponent implements OnInit {
           console.log('Profile saved:', response);
           this.router.navigate(['/home']);
         },
-        error: (error: HttpErrorResponse) => {
+        error: (error: any) => {
           this.loading = false;
           console.error('Failed to save profile:', error);
-          if (error.error && error.error.message) {
-
-            this.errorMessage = `Failed to save profile: ${error.error.message}`;
-          } else {
-            Swal.fire({
-  icon: "error",
-  title: "Oops...",
-  text: "Failed to save profile.please try again.",
-});
-            
-          }
+          this.errorMessage = getFriendlyError(error, 'Failed to save profile. Please try again.');
         },
       });
   }

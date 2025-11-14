@@ -1,4 +1,4 @@
-import { Component, inject } from '@angular/core';
+import { Component, inject, OnInit } from '@angular/core';
 import { CommonModule, DecimalPipe } from '@angular/common';
 import { ActivatedRoute, Router } from '@angular/router';
 import { HttpClientModule, HttpErrorResponse } from '@angular/common/http';
@@ -10,6 +10,9 @@ import { AuthService } from '../../../services/auth.service';
 import { RazorpayOrderResponseDTO } from '../../../models/razorpay-models';
 import { PaymentDTO } from '../../../models/payment-models';
 import Swal from 'sweetalert2';
+import { getFriendlyError } from '../../../utils/error-utils';
+import { QrCodeService } from '../../../services/qr-code.service'; // Import the new service
+import { DomSanitizer, SafeUrl } from '@angular/platform-browser'; // For sanitizing the blob URL
 
 declare var Razorpay: any;
 
@@ -20,7 +23,7 @@ declare var Razorpay: any;
   templateUrl: './payment.component.html',
   styleUrls: ['./payment.component.css'],
 })
-export class PaymentComponent {
+export class PaymentComponent implements OnInit {
   orderId: number | null = null;
   order: OrderDTO | null = null;
 
@@ -31,11 +34,18 @@ export class PaymentComponent {
   paymentSuccessMessage: string | null = null;
   paymentErrorMessage: string | null = null;
 
+  // New properties for QR code functionality
+  upiQRCodeUrl: SafeUrl | null = null;
+  loadingQrCode = false;
+  qrCodeError: string | null = null;
+
   private route = inject(ActivatedRoute);
   private router = inject(Router);
   private orderService = inject(OrderService);
   private paymentService = inject(PaymentService);
   private authService = inject(AuthService);
+  private qrCodeService = inject(QrCodeService); // Inject QrCodeService
+  private sanitizer = inject(DomSanitizer); // Inject DomSanitizer
 
   constructor() {}
 
@@ -47,17 +57,13 @@ export class PaymentComponent {
         this.loadOrderDetails(this.orderId);
       } else {
         Swal.fire({
-  icon: "error",
-  title: "Oops...",
-  text: "Order ID not provided. Cannot proceed to payment.",
- 
-});
-        // this.orderError = 'Order ID not provided. Cannot proceed to payment.';
+          icon: 'error',
+          title: 'Oops...',
+          text: 'Order ID not provided. Cannot proceed to payment.',
+        });
         this.loadingOrder = false;
-        console.error(
-          'PaymentComponent: No orderId found in route parameters.'
-        );
-        this.router.navigate(['/cart']); 
+        console.error('PaymentComponent: No orderId found in route parameters.');
+        this.router.navigate(['/cart']);
       }
     });
   }
@@ -70,10 +76,7 @@ export class PaymentComponent {
       next: (data: OrderDTO) => {
         this.order = data;
         this.loadingOrder = false;
-        console.log(
-          'PaymentComponent: Order details loaded successfully:',
-          this.order
-        );
+        console.log('PaymentComponent: Order details loaded successfully:', this.order);
 
         const currentCustomerId = this.authService.getCurrentUserId();
         const userRoles = this.authService.getUserRoles();
@@ -81,45 +84,23 @@ export class PaymentComponent {
 
         if (this.order.customerId !== currentCustomerId && !isAdmin) {
           Swal.fire({
-  icon: "error",
-  title: "Oops...",
-  text: "You do not have permission to view this order.",
-});
-          // this.orderError = 'You do not have permission to view this order.';
+            icon: 'error',
+            title: 'Oops...',
+            text: 'You do not have permission to view this order.',
+          });
           this.order = null;
-          this.router.navigate(['/orders']); 
+          this.router.navigate(['/orders']);
         } else if (this.order.status === 'PAID') {
           this.paymentSuccessMessage = 'This order has already been paid.';
           this.processingPayment = false;
         }
       },
-      error: (error: HttpErrorResponse) => {
-        Swal.fire({
-  icon: "error",
-  title: "Oops...",
-  text: "Failed to load order details. Please try again.",
-});
-        // this.orderError = 'Failed to load order details. Please try again.';
+      error: (error: any) => {
+        const friendly = getFriendlyError(error, 'Failed to load order details. Please try again.');
+        Swal.fire({ icon: 'error', title: 'Oops...', text: friendly });
         this.loadingOrder = false;
         console.error('PaymentComponent: Error fetching order details:', error);
-        if (error.status === 404) {
-          Swal.fire({
-  icon: "error",
-  title: "Oops...",
-  text: "Order not found for the provided ID..",
-});
-          // this.orderError = 'Order not found for the provided ID.';
-        } else if (error.status === 403) {
-          Swal.fire({
-  icon: "error",
-  title: "Oops...",
-  text: "Access denied to this order. You might not be the owner or an administrator.",
-});
-          // this.orderError =
-          //   'Access denied to this order. You might not be the owner or an administrator.';
-        } else if (error.error && error.error.message) {
-          this.orderError = `Failed to load order: ${error.error.message}`;
-        }
+        this.orderError = friendly;
       },
     });
   }
@@ -128,9 +109,8 @@ export class PaymentComponent {
     if (!this.order || !this.order.orderItems) {
       return 0;
     }
-    return this.order.orderItems.reduce((acc, item) => acc + (item.quantity * item.price), 0);
+    return this.order.orderItems.reduce((acc, item) => acc + item.quantity * item.price, 0);
   }
-
 
   processPayment(): void {
     this.processingPayment = true;
@@ -138,55 +118,81 @@ export class PaymentComponent {
     this.paymentErrorMessage = null;
 
     if (!this.orderId || !this.order || this.order.totalAmount === undefined || this.order.totalAmount === null) {
-      this.paymentErrorMessage =
-        'Order details are missing or incomplete. Cannot process payment.';
+      this.paymentErrorMessage = 'Order details are missing or incomplete. Cannot process payment.';
       this.processingPayment = false;
       return;
     }
 
+    // Reset QR code and its state before starting
+    this.upiQRCodeUrl = null;
+    this.qrCodeError = null;
+
     if (this.selectedPaymentMethod === 'RAZORPAY') {
       this.initiateRazorpayPayment();
+    } else if (this.selectedPaymentMethod === 'UPI_QR_CODE') {
+      this.generateUpiQrCode();
     } else {
-      this.paymentErrorMessage =
-        'Only Razorpay is supported for online payments currently. Please select Razorpay.';
+      this.paymentErrorMessage = 'Only Razorpay and UPI QR Code are supported for online payments currently.';
       this.processingPayment = false;
     }
   }
 
+  // New method to generate UPI QR code
+  generateUpiQrCode(): void {
+    if (!this.order || !this.order.id || this.order.totalAmount === undefined || this.order.totalAmount === null) {
+      this.qrCodeError = 'Order details incomplete for UPI QR code generation.';
+      this.processingPayment = false;
+      return;
+    }
+
+    this.loadingQrCode = true;
+    this.qrCodeError = null;
+
+    this.qrCodeService
+      .generateUpiQRCodeForPayment(this.order.totalAmount, 'INR', this.order.id)
+      .subscribe({
+        next: (qrCodeBlob: Blob) => {
+          // Convert the Blob to a URL that can be used in the image tag
+          const objectURL = URL.createObjectURL(qrCodeBlob);
+          this.upiQRCodeUrl = this.sanitizer.bypassSecurityTrustUrl(objectURL);
+          this.loadingQrCode = false;
+          this.processingPayment = false; // Stop the main processing loader
+          console.log('PaymentComponent: UPI QR code generated successfully.');
+        },
+        error: (error: any) => {
+          const friendly = getFriendlyError(error, 'Failed to generate UPI QR code. Please try again.');
+          this.qrCodeError = friendly;
+          this.loadingQrCode = false;
+          this.processingPayment = false;
+          console.error('PaymentComponent: Error generating UPI QR code:', error);
+        },
+      });
+  }
+
   private initiateRazorpayPayment(): void {
     if (!this.order || !this.order.id || this.order.totalAmount === undefined || this.order.totalAmount === null) {
-      this.paymentErrorMessage =
-        'Order details incomplete for Razorpay payment.';
+      this.paymentErrorMessage = 'Order details incomplete for Razorpay payment.';
       this.processingPayment = false;
       return;
     }
 
     this.paymentService
       .createRazorpayOrder(
-        Math.round(this.order.totalAmount * 100), // <-- Convert to paise
+        Math.round(this.order.totalAmount * 100),
         'INR',
         this.order.id.toString(),
         this.order.id
       )
       .subscribe({
         next: (razorpayOrder: RazorpayOrderResponseDTO) => {
-          console.log(
-            'PaymentComponent: Razorpay Order created on backend:',
-            razorpayOrder
-          );
+          console.log('PaymentComponent: Razorpay Order created on backend:', razorpayOrder);
           this.openRazorpayCheckout(razorpayOrder);
         },
-        error: (error: HttpErrorResponse) => {
-          this.paymentErrorMessage =
-            'Failed to create Razorpay order. Please try again.';
+        error: (error: any) => {
+          const friendly = getFriendlyError(error, 'Failed to create Razorpay order. Please try again.');
+          this.paymentErrorMessage = friendly;
           this.processingPayment = false;
-          console.error(
-            'PaymentComponent: Error creating Razorpay order:',
-            error
-          );
-          if (error.error && error.error.message) {
-            this.paymentErrorMessage += `: ${error.error.message}`;
-          }
+          console.error('PaymentComponent: Error creating Razorpay order:', error);
         },
       });
   }
@@ -214,10 +220,7 @@ export class PaymentComponent {
       image: 'https://placehold.co/100x100/007bff/ffffff?text=E',
       order_id: razorpayOrder.id,
       handler: (response: any) => {
-        console.log(
-          'PaymentComponent: Razorpay payment successful callback received:',
-          response
-        );
+        console.log('PaymentComponent: Razorpay payment successful callback received:', response);
         this.captureRazorpayPayment(response);
       },
       prefill: {
@@ -240,10 +243,7 @@ export class PaymentComponent {
         response.error.description || 'Unknown error'
       }. Please try again.`;
       this.processingPayment = false;
-      console.error(
-        'PaymentComponent: Razorpay payment failed callback received:',
-        response
-      );
+      console.error('PaymentComponent: Razorpay payment failed callback received:', response);
     });
 
     rzp.open();
@@ -269,25 +269,16 @@ export class PaymentComponent {
         next: (payment: PaymentDTO) => {
           this.paymentSuccessMessage = `Payment successful! Order ${payment.orderId} confirmed.`;
           this.processingPayment = false;
-          console.log(
-            'PaymentComponent: Payment captured and recorded on backend:',
-            payment
-          );
+          console.log('PaymentComponent: Payment captured and recorded on backend:', payment);
           setTimeout(() => {
             this.router.navigate(['/home/orders', this.orderId]);
           }, 3000);
         },
-        error: (error: HttpErrorResponse) => {
-          this.paymentErrorMessage =
-            'Payment verification failed on server. Please contact support or try again.';
+        error: (error: any) => {
+          const friendly = getFriendlyError(error, 'Payment verification failed on server. Please contact support or try again.');
+          this.paymentErrorMessage = friendly;
           this.processingPayment = false;
-          console.error(
-            'PaymentComponent: Error capturing Razorpay payment on backend:',
-            error
-          );
-          if (error.error && error.error.message) {
-            this.paymentErrorMessage += `: ${error.error.message}`;
-          }
+          console.error('PaymentComponent: Error capturing Razorpay payment on backend:', error);
         },
       });
   }

@@ -73,5 +73,10 @@
     "name": "web",
     "type": "java.lang.String",
     "description": "A description for 'web'"
+  },
+  {
+    "name": "logging",
+    "type": "java.lang.String",
+    "description": "A description for 'logging'"
   }
 ]}

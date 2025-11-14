@@ -21,4 +21,6 @@ public interface OrderService {
 
     OrderDTO updateOrderStatus(Long orderId, String status); 
     void cancelOrder(Long orderId);
+
+	OrderDTO updateOrderFull(Long orderId, OrderDTO updatedDetails);
 }

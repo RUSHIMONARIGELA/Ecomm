@@ -3,11 +3,13 @@ package com.example.Ecomm.serviceImpl;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import com.example.Ecomm.dto.CouponCheckResponseDTO;
 import com.example.Ecomm.dto.DiscountDTO;
 import com.example.Ecomm.entitiy.Discount;
 import com.example.Ecomm.entitiy.Discount.DiscountType;
@@ -23,7 +25,6 @@ public class DiscountServiceImpl implements DiscountService {
 	@Autowired
 	private DiscountRepository discountRepository;
 
-	
 	@Override
 	@Transactional
 	public DiscountDTO createDiscount(DiscountDTO discountDTO) {
@@ -70,7 +71,7 @@ public class DiscountServiceImpl implements DiscountService {
 		existingDiscount.setType(DiscountType.valueOf(discountDTO.getType()));
 		existingDiscount.setValue(discountDTO.getValue());
 		existingDiscount.setMinOrderAmount(discountDTO.getMinOrderAmount());
-		
+
 		existingDiscount.setStartDate(discountDTO.getStartDate());
 		existingDiscount.setEndDate(discountDTO.getEndDate());
 
@@ -93,23 +94,14 @@ public class DiscountServiceImpl implements DiscountService {
 	public boolean isValidDiscount(String code, BigDecimal currentAmount) {
 		return discountRepository.findByCode(code).map(discount -> {
 			LocalDateTime now = LocalDateTime.now();
-			if (!discount.isActive()) {
-				System.out.println("DEBUG: Discount " + code + " is not active.");
+			if (!discount.isActive())
 				return false;
-			}
-			if (now.isBefore(discount.getStartDate()) || now.isAfter(discount.getEndDate())) {
-				System.out.println("DEBUG: Discount " + code + " is outside its valid date range.");
+			if (now.isBefore(discount.getStartDate()) || now.isAfter(discount.getEndDate()))
 				return false;
-			}
-			if (discount.getUsageLimit() != null && discount.getUsedCount() >= discount.getUsageLimit()) {
-				System.out.println("DEBUG: Discount " + code + " has reached its usage limit.");
+			if (discount.getUsageLimit() != null && discount.getUsedCount() >= discount.getUsageLimit())
 				return false;
-			}
-			if (discount.getMinOrderAmount() != null && currentAmount.compareTo(discount.getMinOrderAmount()) < 0) {
-				System.out.println("DEBUG: Discount " + code + " requires a minimum order amount of "
-						+ discount.getMinOrderAmount() + ".");
+			if (discount.getMinOrderAmount() != null && currentAmount.compareTo(discount.getMinOrderAmount()) < 0)
 				return false;
-			}
 			return true;
 		}).orElse(false);
 	}
@@ -123,7 +115,7 @@ public class DiscountServiceImpl implements DiscountService {
 		discount.setType(DiscountType.valueOf(discountDTO.getType()));
 		discount.setValue(discountDTO.getValue());
 		discount.setMinOrderAmount(discountDTO.getMinOrderAmount());
-		
+
 		discount.setStartDate(discountDTO.getStartDate());
 		discount.setEndDate(discountDTO.getEndDate());
 
@@ -140,7 +132,7 @@ public class DiscountServiceImpl implements DiscountService {
 		discountDTO.setType(discount.getType().name());
 		discountDTO.setValue(discount.getValue());
 		discountDTO.setMinOrderAmount(discount.getMinOrderAmount());
-		
+
 		discountDTO.setStartDate(discount.getStartDate());
 		discountDTO.setEndDate(discount.getEndDate());
 
@@ -150,23 +142,84 @@ public class DiscountServiceImpl implements DiscountService {
 		return discountDTO;
 	}
 
-   
-    @Override
-    public List<DiscountDTO> getAvailableCouponsForCustomer(Long customerId) {
-        
-        List<Discount> allActiveDiscounts = discountRepository.findByActiveTrue(); 
-        LocalDateTime now = LocalDateTime.now(); 
+	@Override
+	public List<DiscountDTO> getAvailableCouponsForCustomer(Long customerId) {
+		List<Discount> allActiveDiscounts = discountRepository.findByActiveTrue();
+		LocalDateTime now = LocalDateTime.now();
+		List<Discount> availableDiscounts = allActiveDiscounts.stream().filter(discount -> {
+			if (now.isBefore(discount.getStartDate())) {
+				return false;
+			}
 
-        List<Discount> availableDiscounts = allActiveDiscounts.stream()
-                .filter(discount -> {
-                    
-                    return discount.getEndDate().isAfter(now) || discount.getEndDate().isEqual(now);
-                })
-             
-                .collect(Collectors.toList());
+			if (now.isAfter(discount.getEndDate())) {
+				return false;
+			}
 
-        return availableDiscounts.stream()
-                .map(this::mapDiscountToDTO) 
-                .collect(Collectors.toList());
-    }
+			if (discount.getUsageLimit() != null && discount.getUsedCount() >= discount.getUsageLimit()) {
+				return false;
+			}
+
+			return true;
+		})
+
+				.collect(Collectors.toList());
+
+		return availableDiscounts.stream().map(this::mapDiscountToDTO).collect(Collectors.toList());
+	}
+
+	@Override
+	public CouponCheckResponseDTO checkCouponValidityAndUsage(String code, BigDecimal currentAmount, Long customerId) {
+		Optional<Discount> discountOpt = discountRepository.findByCode(code);
+		CouponCheckResponseDTO response = new CouponCheckResponseDTO();
+		response.setCouponCode(code);
+
+		if (discountOpt.isEmpty()) {
+			response.setValid(false);
+			response.setUsed(false);
+			response.setMessage("Coupon code does not exist.");
+			return response;
+		}
+
+		Discount discount = discountOpt.get();
+		LocalDateTime now = LocalDateTime.now();
+
+		if (discount.getUsageLimit() != null && discount.getUsedCount() >= discount.getUsageLimit()) {
+			response.setValid(false);
+			response.setUsed(true);
+			response.setMessage("Coupon has reached its maximum usage limit globally.");
+			return response;
+		}
+
+		if (!discount.isActive()) {
+			response.setValid(false);
+			response.setMessage("Coupon is not currently active.");
+		} else if (now.isBefore(discount.getStartDate()) || now.isAfter(discount.getEndDate())) {
+			response.setValid(false);
+			response.setMessage("Coupon is expired or not yet active.");
+		} else if (discount.getMinOrderAmount() != null && currentAmount.compareTo(discount.getMinOrderAmount()) < 0) {
+			response.setValid(false);
+			response.setMessage("Minimum order amount of " + discount.getMinOrderAmount() + " is required.");
+		} else {
+			response.setValid(true);
+			response.setMessage("Coupon is valid.");
+			if (customerId != null) {
+				boolean customerHasUsedCoupon = false;
+				if (customerHasUsedCoupon) {
+					response.setValid(false);
+					response.setUsed(true);
+					response.setMessage("You have already redeemed this coupon.");
+				}
+			}
+		}
+		if (response.isValid()) {
+			response.setDiscountType(discount.getType().name());
+			response.setDiscountValue(discount.getValue());
+		}
+		return response;
+	}
+
+	@Override
+	public boolean isCodeDuplicate(String code) {
+		return discountRepository.findByCode(code).isPresent();
+	}
 }

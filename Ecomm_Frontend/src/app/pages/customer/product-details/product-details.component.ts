@@ -10,6 +10,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ProductReviewComponent } from '../product-review/product-review.component';
 import Swal from 'sweetalert2';
+import { WishlistService } from '../../../services/WishlistService';
 
 @Component({
   selector: 'app-product-details',
@@ -31,6 +32,7 @@ export class ProductDetailsComponent implements OnInit {
   private cartService = inject(CartService);
   private authService = inject(AuthService);
   private router = inject(Router);
+  private wishlistService = inject(WishlistService); // Added WishlistService injection
 
   ngOnInit(): void {
     this.route.paramMap.subscribe(params => {
@@ -57,23 +59,6 @@ export class ProductDetailsComponent implements OnInit {
     });
   }
 
-  // selectImage(index: number): void {
-  //   if (this.product?.images && index >= 0 && index < this.product.images.length) {
-  //     this.currentImageIndex = index;
-  //   }
-  // }
-
-  // prevImage(): void {
-  //   if (this.product?.images && this.currentImageIndex > 0) {
-  //     this.currentImageIndex--;
-  //   }
-  // }
-
-  // nextImage(): void {
-  //   if (this.product?.images && this.currentImageIndex < this.product.images.length - 1) {
-  //     this.currentImageIndex++;
-  //   }
-  // }
   // Safely select an image
   selectImage(index: number): void {
     if (!this.product?.images || index < 0 || index >= this.product.images.length) return;
@@ -91,6 +76,66 @@ export class ProductDetailsComponent implements OnInit {
     if (!this.product?.images || this.currentImageIndex >= this.product.images.length - 1) return;
     this.currentImageIndex++;
   }
+
+  /**
+   * Adds the product to the user's wishlist.
+   * Handles authentication check and API communication.
+   * @param productId The ID of the product to add (can be undefined).
+   */
+  addToWishlist(productId: number | undefined): void { // Changed parameter type to accept undefined
+    if (!productId) {
+      Swal.fire({
+        icon: 'error',
+        title: 'Error',
+        text: 'Cannot add to wishlist: Product ID is missing.',
+        confirmButtonText: 'OK'
+      });
+      return;
+    }
+
+    const customerId = this.authService.getCurrentUserId();
+    if (!customerId) {
+      Swal.fire({
+        icon: 'error',
+        title: 'Not Logged In',
+        text: 'You must be logged in to add products to the wishlist.',
+        footer: '<a href="/login">Login now</a>',
+        confirmButtonText: 'OK'
+      });
+      return;
+    }
+
+    this.wishlistService.addToWishlist(productId).subscribe({
+      next: (response) => {
+        Swal.fire({
+          icon: 'success',
+          title: 'Wishlist Updated!',
+          text: `${response.productName} has been added to your wishlist.`,
+          showConfirmButton: false,
+          timer: 2000
+        });
+        // Logic to update the heart icon to 'bi-heart-fill' would go here if you tracked wishlist status
+      },
+      error: (error) => {
+        let message = 'Failed to add item to wishlist. Please try again.';
+        
+        if (error.status === 409) { // Assuming 409 Conflict for duplicate
+          message = error.error?.message || 'This product is already in your wishlist.';
+        } else if (error.status === 401 || error.status === 403) {
+          message = 'Please log in to add items to your wishlist.';
+        } else {
+          message = error.error?.message || message;
+        }
+
+        Swal.fire({
+          icon: 'warning',
+          title: 'Action Failed',
+          text: message
+        });
+      }
+    });
+  }
+
 
   addToCart(): void {
     if (!this.product) return;

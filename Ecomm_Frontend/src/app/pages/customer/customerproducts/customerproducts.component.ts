@@ -6,6 +6,7 @@ import { FormsModule } from '@angular/forms';
 
 
 import { CategoryDTO } from '../../../models/category-models';
+import { getFriendlyError } from '../../../utils/error-utils';
 import { ProductService } from '../../../services/product.service';
 import { CartService } from '../../../services/CartService';
 import { AuthService } from '../../../services/auth.service';
@@ -76,13 +77,10 @@ export class CustomerproductsComponent implements OnInit {
         this.sortProducts(); 
         this.loading = false;
       },
-      error: (err: HttpErrorResponse) => {
-        this.error = 'Failed to load products. Please try again.';
+      error: (err: any) => {
         this.loading = false;
         console.error('CustomerProductsComponent: Error fetching products:', err);
-        if (err.error && err.error.message) {
-          this.error = `Failed to load products: ${err.error.message}`;
-        }
+        this.error = getFriendlyError(err, 'Failed to load products. Please try again.');
       }
     });
   }
@@ -92,8 +90,9 @@ export class CustomerproductsComponent implements OnInit {
       next: (data: CategoryDTO[]) => {
         this.categories = data;
       },
-      error: (err: HttpErrorResponse) => {
+      error: (err: any) => {
         console.error('CustomerProductsComponent: Error fetching categories:', err);
+        this.error = getFriendlyError(err, 'Failed to load categories. Please try again.');
       }
     });
   }
@@ -155,20 +154,13 @@ export class CustomerproductsComponent implements OnInit {
         this.addingToCartProductId = null;
         this.cartUpdateService.notifyCartChanged();
       },
-      error: (err: HttpErrorResponse) => {
+      error: (err: any) => {
         this.addingToCartProductId = null;
         console.error('CustomerProductsComponent: Error adding to cart:', err);
-        if (err.status === 400) {
-          if (err.error && err.error.message && err.error.message.includes('Not enough stock')) {
-            this.error = `Failed to add to cart: ${err.error.message}.`;
-          } else {
-            this.error = 'Failed to add to cart: Invalid request.';
-          }
+        if (err?.status === 400 && err.error && typeof err.error.message === 'string' && err.error.message.includes('Not enough stock')) {
+          this.error = `Failed to add to cart: ${err.error.message}.`;
         } else {
-          this.error = 'Failed to add to cart. Please try again.';
-          if (err.error && err.error.message) {
-            this.error += `: ${err.error.message}`;
-          }
+          this.error = getFriendlyError(err, 'Failed to add to cart. Please try again.');
         }
       }
     });

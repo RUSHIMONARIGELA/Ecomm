@@ -4,6 +4,7 @@ import { Component, inject } from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
 import { CustomerDTO } from '../../../models/customer-models';
 import { CustomerService } from '../../../services/customer.service';
+import Swal from 'sweetalert2';
 
 @Component({
   selector: 'app-customer-list',
@@ -37,7 +38,12 @@ export class CustomerListComponent {
         this.loadingCustomers = false;
       },
       error: (err: HttpErrorResponse) => {
-        this.customersError = 'Failed to load customers. Please try again.';
+        Swal.fire({
+          icon:"error",
+          title:"oops..",
+          text:"Failed to load customers. Please try again."
+        });
+        // this.customersError = 'Failed to load customers. Please try again.';
         this.loadingCustomers = false;
         console.error('CustomerListComponent: Error fetching customers:', err);
         if (err.error && err.error.message) {
@@ -52,14 +58,24 @@ export class CustomerListComponent {
       this.router.navigate(['/admin/customers/edit', customerId]);
     } else {
       console.warn('Attempted to view profile with undefined customer ID.');
-      this.customersError = 'Cannot view profile: Customer ID is missing.';
+      Swal.fire({
+        icon:"error",
+        title:"oops..",
+        text:"Cannot view profile: Customer ID is missing"
+      });
+      // this.customersError = 'Cannot view profile: Customer ID is missing.';
     }
   }
 
   deleteCustomer(customerId: number | undefined): void {
     if (customerId === undefined) {
       console.error('Cannot delete customer: Customer ID is undefined.');
-      this.customersError = 'Error deleting customer: Customer ID is missing.';
+      Swal.fire({
+        icon:"error",
+        title:"oops..",
+        text:"Error deleting customer: Customer ID is missing."
+      });
+      // this.customersError = 'Error deleting customer: Customer ID is missing.';
       return;
     }
 
@@ -89,14 +105,26 @@ export class CustomerListComponent {
             err.error ||
             'Deletion failed: Customer has active orders or other related data.';
         } else if (err.status === 404) {
-          this.customersError = 'Deletion failed: Customer not found.';
+
+          Swal.fire({
+            icon:"error",
+            title:"oops..",
+            text:"Deletion failed: Customer not found."
+          });
+          // this.customersError = 'Deletion failed: Customer not found.';
         } else if (err.error && typeof err.error === 'string') {
           this.customersError = `Deletion failed: ${err.error}`;
         } else if (err.error && err.error.message) {
           this.customersError = `Deletion failed: ${err.error.message}`;
         } else {
-          this.customersError =
-            'Deletion failed due to an unexpected error. Please try again.';
+          Swal.fire({
+            icon:"error",
+            title:"oops..",
+            text:"Deletion failed due to an unexpected error. Please try again."
+
+          });
+        //   this.customersError =
+        //     'Deletion failed due to an unexpected error. Please try again.';
         }
       },
     });

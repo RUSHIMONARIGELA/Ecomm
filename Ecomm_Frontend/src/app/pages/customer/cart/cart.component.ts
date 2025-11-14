@@ -14,6 +14,7 @@ import { AuthService } from '../../../services/auth.service';
 import { CartUpdateService } from '../../../services/cart-update.service';
 import { OrderService } from '../../../services/order.service';
 import Swal from 'sweetalert2';
+import { getFriendlyError } from '../../../utils/error-utils';
 
 @Component({
   selector: 'app-customer-cart',
@@ -99,15 +100,13 @@ export class CartComponent implements OnInit, OnDestroy {
             this.couponCode = '';
           }
         },
-        error: (error: HttpErrorResponse) => {
-          this.cartError = 'Failed to load cart. Please try again.';
+        error: (error: any) => {
           this.loadingCart = false;
           console.error('CustomerCartComponent: Error fetching cart:', error);
-          if (error.status === 404) {
-            this.cartError =
-              'Cart not found. It might be created on first item addition.';
-          } else if (error.error && error.error.message) {
-            this.cartError = `Failed to load cart: ${error.error.message}`;
+          if (error?.status === 404) {
+            this.cartError = 'Cart not found. It might be created on first item addition.';
+          } else {
+            this.cartError = getFriendlyError(error, 'Failed to load cart. Please try again.');
           }
         },
       });
@@ -136,18 +135,12 @@ export class CartComponent implements OnInit, OnDestroy {
           //   this.availableCoupons
           // );
         },
-        error: (error: HttpErrorResponse) => {
-          // this.couponsError = 'Failed to load available coupons.';
-          Swal.fire({
-  icon: "error",
-  title: "Oops...",
-  text: "Failed to load available coupons!",
-});
+        error: (error: any) => {
+          const friendly = getFriendlyError(error, 'Failed to load available coupons!');
+          Swal.fire({ icon: 'error', title: 'Oops...', text: friendly });
           this.loadingCoupons = false;
-          console.error(
-            'CustomerCartComponent: Error fetching available coupons:',
-            error
-          );
+          console.error('CustomerCartComponent: Error fetching available coupons:', error);
+          this.couponsError = friendly;
         },
       });
     } else {
@@ -225,28 +218,17 @@ export class CartComponent implements OnInit, OnDestroy {
           console.log('Quantity updated successfully:', data);
           this.cartUpdateService.notifyCartChanged();
         },
-        error: (error: HttpErrorResponse) => {
-          // this.cartError = 'The quantiy should not be more than stock quantity.';
-          Swal.fire({
-  icon: "error",
-  title: "Oops...",
-  text: "The quantiy should not be more than stock quantity!",
-});
-          this.submitting = false;
-          console.error(
-            'CustomerCartComponent: Error updating quantity:',
-            error
-          );
-          const itemToRevert = this.cart?.cartItems.find(
-            (i) => i.productDetails?.id === productId
-          );
-          if (itemToRevert) {
-            itemToRevert.quantity = oldQuantity;
-          }
-          if (error.error && error.error.message) {
-            this.cartError = `Failed to update quantity: ${error.error.message}`;
-          }
-        },
+        error: (error: any) => {
+            const friendly = getFriendlyError(error, 'The quantity should not be more than stock quantity.');
+            Swal.fire({ icon: 'error', title: 'Oops...', text: friendly });
+            this.submitting = false;
+            console.error('CustomerCartComponent: Error updating quantity:', error);
+            const itemToRevert = this.cart?.cartItems.find((i) => i.productDetails?.id === productId);
+            if (itemToRevert) {
+              itemToRevert.quantity = oldQuantity;
+            }
+            this.cartError = friendly;
+          },
       });
   }
 
@@ -302,21 +284,12 @@ export class CartComponent implements OnInit, OnDestroy {
                   icon: 'success',
                 });
               },
-              error: (error: HttpErrorResponse) => {
-               Swal.fire({
-                icon:"error",
-                title:"ooops...",
-                text:"Failed to remove item. Please try again."
-               });
-                // this.cartError = 'Failed to remove item. Please try again.';
+              error: (error: any) => {
+                const friendly = getFriendlyError(error, 'Failed to remove item. Please try again.');
+                Swal.fire({ icon: 'error', title: 'Oops...', text: friendly });
                 this.submitting = false;
-                console.error(
-                  'CustomerCartComponent: Error removing item:',
-                  error
-                );
-                if (error.error && error.error.message) {
-                  this.cartError = `Failed to remove item: ${error.error.message}`;
-                }
+                console.error('CustomerCartComponent: Error removing item:', error);
+                this.cartError = friendly;
               },
             });
         } else if (result.dismiss === Swal.DismissReason.cancel) {
@@ -370,13 +343,11 @@ export class CartComponent implements OnInit, OnDestroy {
               icon: 'success',
             });
           },
-          error: (error: HttpErrorResponse) => {
-            this.cartError = 'Failed to clear cart. Please try again.';
+          error: (error: any) => {
+            const friendly = getFriendlyError(error, 'Failed to clear cart. Please try again.');
             this.submitting = false;
             console.error('CustomerCartComponent: Error clearing cart:', error);
-            if (error.error && error.error.message) {
-              this.cartError = `Failed to clear cart: ${error.error.message}`;
-            }
+            this.cartError = friendly;
           },
         });
       }

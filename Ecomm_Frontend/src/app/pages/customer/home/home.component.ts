@@ -4,6 +4,7 @@ import { Router, RouterLink, RouterOutlet } from '@angular/router';
 
 import { HttpClientModule, HttpErrorResponse } from '@angular/common/http'; 
 import { AuthService } from '../../../services/auth.service';
+import { getFriendlyError } from '../../../utils/error-utils';
 import { ProductService } from '../../../services/product.service';
 import { ProductDTO } from '../../../models/product.model';
 
@@ -46,13 +47,10 @@ export class HomeComponent implements OnInit {
         this.featuredProducts = products.slice(0, 4);
         this.loadingProducts = false;
       },
-      error: (error: HttpErrorResponse) => { 
-        this.productsError = 'Failed to load products. Please try again later.';
+      error: (error: any) => {
         this.loadingProducts = false;
         console.error('Error fetching featured products for customer home:', error);
-        if (error.error && error.error.message) {
-          this.productsError = `Failed to load products: ${error.error.message}`;
-        }
+        this.productsError = getFriendlyError(error, 'Failed to load products. Please try again later.');
       }
     });
   }

@@ -3,7 +3,10 @@ package com.example.Ecomm.entitiy;
 import java.math.BigDecimal;
 import java.util.List;
 import java.util.Objects;
+import java.util.Set;
+import java.util.HashSet;
 
+import jakarta.persistence.CascadeType;
 import jakarta.persistence.CollectionTable;
 import jakarta.persistence.Column;
 import jakarta.persistence.ElementCollection;
@@ -13,6 +16,7 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 
 @Entity
@@ -44,6 +48,9 @@ public class Product {
 
     @Column(name = "stock_quantity", nullable = false)
     private Long stockQuantity;
+
+    @OneToMany(mappedBy = "product", cascade = CascadeType.ALL, orphanRemoval = true)
+    private Set<WishlistItem> wishlistItems = new HashSet<>();
 
     public Product() {
         super();
@@ -114,6 +121,15 @@ public class Product {
     public void setStockQuantity(Long stockQuantity) {
         this.stockQuantity = stockQuantity;
     }
+    
+    public Set<WishlistItem> getWishlistItems() {
+        return wishlistItems;
+    }
+
+    public void setWishlistItems(Set<WishlistItem> wishlistItems) {
+        this.wishlistItems = wishlistItems;
+    }
+
 
     @Override
     public boolean equals(Object o) {
@@ -133,13 +149,14 @@ public class Product {
     @Override
     public String toString() {
         return "Product{" +
-               "id=" + id +
-               ", name='" + name + '\'' +
-               ", description='" + description + '\'' +
-               ", price=" + price +
-               ", categoryId=" + (category != null ? category.getId() : "null") +
-               ", stockQuantity=" + stockQuantity +
-               ", imagesCount=" + (images != null ? images.size() : 0) +
-               '}';
+                "id=" + id +
+                ", name='" + name + '\'' +
+                ", description='" + description + '\'' +
+                ", price=" + price +
+                ", categoryId=" + (category != null ? category.getId() : "null") +
+                ", stockQuantity=" + stockQuantity +
+                ", imagesCount=" + (images != null ? images.size() : 0) +
+                ", wishlistCount=" + (wishlistItems != null ? wishlistItems.size() : 0) + 
+                '}';
     }
 }
