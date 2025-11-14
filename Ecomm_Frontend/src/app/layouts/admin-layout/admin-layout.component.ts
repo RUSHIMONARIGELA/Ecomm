@@ -53,13 +53,13 @@ export class AdminLayoutComponent {
       this.currentUserRole = null;
       this.currentUsername = null;
     }
-    console.log('AdminLayoutComponent: Auth Status Updated:', {
-      isLoggedIn: this.isLoggedIn,
-      isAdmin: this.isAdmin,
-      isSuperAdmin: this.isSuperAdmin,
-      currentUserRole: this.currentUserRole,
-      currentUsername: this.currentUsername
-    });
+    // console.log('AdminLayoutComponent: Auth Status Updated:', {
+    //   isLoggedIn: this.isLoggedIn,
+    //   isAdmin: this.isAdmin,
+    //   isSuperAdmin: this.isSuperAdmin,
+    //   currentUserRole: this.currentUserRole,
+    //   currentUsername: this.currentUsername
+    // });
   }
 
   logout() {

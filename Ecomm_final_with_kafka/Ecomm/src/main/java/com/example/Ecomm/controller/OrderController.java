@@ -1,6 +1,7 @@
 package com.example.Ecomm.controller;
 
 import java.util.List;
+import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -94,10 +95,20 @@ public class OrderController {
         return new ResponseEntity<>(HttpStatus.NO_CONTENT);
     }
 
-    @PutMapping("/{orderId}")
-    @PreAuthorize("hasAuthority('" + SecurityConstants.ROLE_ADMIN + "')")
-    public ResponseEntity<OrderDTO> updateOrder(@PathVariable Long orderId, @Validated @RequestBody String status) {
-        OrderDTO updatedOrder = orderService.updateOrderStatus(orderId, status);
-        return new ResponseEntity<>(updatedOrder, HttpStatus.OK);
-    }
+//    @PutMapping("/{orderId}")
+//    @PreAuthorize("hasAuthority('" + SecurityConstants.ROLE_ADMIN + "')")
+//    public ResponseEntity<OrderDTO> updateOrder(@PathVariable Long orderId, @Validated @RequestBody String status) {
+//        OrderDTO updatedOrder = orderService.updateOrderStatus(orderId, status);
+//        return new ResponseEntity<>(updatedOrder, HttpStatus.OK);
+//    }
+ // OrderController.java
+ // Create a new DTO specifically for updates if needed, or reuse OrderDTO
+ // We will assume a new service method `updateOrderFull` is used
+ @PutMapping("/{orderId}")
+ @PreAuthorize("hasAuthority('" + SecurityConstants.ROLE_ADMIN + "')")
+ public ResponseEntity<OrderDTO> updateOrder(@PathVariable Long orderId, @Validated @RequestBody OrderDTO orderDTO) {
+     // Call a new service method that handles full DTO updates
+     OrderDTO updatedOrder = orderService.updateOrderFull(orderId, orderDTO); 
+     return new ResponseEntity<>(updatedOrder, HttpStatus.OK);
+ }
 }

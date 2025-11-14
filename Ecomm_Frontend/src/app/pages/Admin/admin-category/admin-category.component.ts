@@ -4,6 +4,7 @@ import { CategoryDTO } from '../../../models/category-models';
 import { CategoryService } from '../../../services/category.service';
 import { FormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
+import Swal from 'sweetalert2';
 
 @Component({
   selector: 'app-admin-category',
@@ -39,7 +40,13 @@ export class AdminCategoryComponent {
         this.loading = false;
       },
       error: (err: HttpErrorResponse) => {
-        this.error = 'Failed to load categories. Please try again.';
+
+        Swal.fire({
+          icon:"error",
+          title:"oops..",
+          text:"Failed to load categories. Please try again."
+        });
+        // this.error = 'Failed to load categories. Please try again.';
         this.loading = false;
         console.error(
           'AdminCategoryComponent: Error fetching categories:',
@@ -60,7 +67,13 @@ export class AdminCategoryComponent {
     this.successMessage = null;
 
     if (!this.newCategory.name.trim()) {
-      this.error = 'Category name cannot be empty.';
+
+      Swal.fire({
+        icon:"error",
+        title:"oops..",
+        text:"Category name cannot be empty."
+      });
+      // this.error = 'Category name cannot be empty.';
       this.submitting = false;
       return;
     }
@@ -93,11 +106,23 @@ export class AdminCategoryComponent {
 
   updateCategory(): void {
     if (!this.editingCategory || !this.editingCategory.id) {
-      this.error = 'No category selected for update.';
+
+      Swal.fire({
+        icon:"error",
+        title:"oops..",
+        text:"No category selected for update."
+      });
+      // this.error = 'No category selected for update.';
       return;
     }
     if (!this.editingCategory.name.trim()) {
-      this.error = 'Category name cannot be empty.';
+
+      Swal.fire({
+        icon:"error",
+        title:"oops..",
+        text:"Category name cannot be empty."
+      });
+      // this.error = 'Category name cannot be empty.';
       return;
     }
 
@@ -115,7 +140,13 @@ export class AdminCategoryComponent {
           this.submitting = false;
         },
         error: (err: HttpErrorResponse) => {
-          this.error = 'Failed to update category.';
+
+          Swal.fire({
+            icon:"error",
+            title:"oops..",
+            text:"Failed to update category."
+          });
+          // this.error = 'Failed to update category.';
           this.submitting = false;
           console.error(
             'AdminCategoryComponent: Error updating category:',
@@ -143,7 +174,13 @@ export class AdminCategoryComponent {
   deleteCategory(id: number | undefined): void {
     if (id === undefined) {
       console.error('Cannot delete category: ID is undefined.');
-      this.error = 'Error deleting category: ID is missing.';
+
+      Swal.fire({
+        icon:"error",
+        title:"oops..",
+        text:"Error deleting category: ID is missing."
+      });
+      // this.error = 'Error deleting category: ID is missing.';
       return;
     }
 
@@ -161,16 +198,31 @@ export class AdminCategoryComponent {
 
     this.categoryService.deleteCategory(id).subscribe({
       next: () => {
-        this.successMessage = 'Category deleted successfully!';
+
+        Swal.fire({
+          icon:"success",
+          title:"Good Job.",
+          text:"Category deleted successfully!"
+        });
+        // this.successMessage = 'Category deleted successfully!';
         this.loadCategories();
         this.submitting = false;
       },
       error: (err: HttpErrorResponse) => {
-        this.error = 'Failed to delete category.';
+        Swal.fire({
+          icon:"error",
+          title:"Failed to delete category."
+        });
+        // this.error = 'Failed to delete category.';
         this.submitting = false;
         console.error('AdminCategoryComponent: Error deleting category:', err);
         if (err.status === 409) {
-          this.error = `Failed to delete category: It is currently linked to one or more products. Please reassign or delete linked products first.`;
+          Swal.fire({
+            icon:"error",
+            title:"oops..",
+            text:"Failed to delete category: It is currently linked to one or more products. Please reassign or delete linked products first."
+          });
+          // this.error = `Failed to delete category: It is currently linked to one or more products. Please reassign or delete linked products first.`;
         } else if (err.error && typeof err.error === 'string') {
           this.error = `Failed to delete category: ${err.error}`;
         } else if (err.error && err.error.message) {

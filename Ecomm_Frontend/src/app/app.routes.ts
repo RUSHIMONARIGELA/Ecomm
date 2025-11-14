@@ -28,6 +28,7 @@ import { DiscountFormComponent } from './pages/Admin/discount-form/discount-form
 import { UserManagementComponent } from './pages/Admin/user-management/user-management.component'; // Keep this import
 import { ProductDetailsComponent } from './pages/customer/product-details/product-details.component';
 import { ProductReviewComponent } from './pages/customer/product-review/product-review.component';
+import { WishlistComponent } from './pages/customer/wishlist/wishlist.component';
 
 export const routes: Routes = [
 
@@ -82,7 +83,8 @@ export const routes: Routes = [
       { path: 'orders/:orderId', component: OrdersComponent },
       { path: 'profile', component: ProfileComponent },
       { path: 'checkout/:orderId', component: PaymentComponent },
-      {path: 'review', component:ProductReviewComponent}
+      {path: 'review', component: ProductReviewComponent},
+      {path:'wishlist', component: WishlistComponent}
     ],
   },
 

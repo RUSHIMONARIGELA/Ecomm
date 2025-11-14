@@ -77,13 +77,32 @@
             [max]="product.stockQuantity"
             style="width: 90px; height: 45px;">
         </div>
-        <button
-          class="btn btn-primary btn-lg w-100 rounded-3 py-3 fw-bold"
-          [disabled]="product.stockQuantity === 0"
-          (click)="addToCart()">
-          <i class="bi bi-cart-plus me-2"></i>
-          {{ product.stockQuantity === 0 ? 'Out of Stock' : 'Add to Cart' }}
-        </button>
+        
+        <!-- START: NEW WISHLIST/CART ACTION BLOCK -->
+        <div class="d-flex gap-3 mb-4">
+            <!-- Add to Cart Button (Main action) -->
+            <button
+              class="btn btn-primary btn-lg flex-grow-1 rounded-3 py-3 fw-bold"
+              [disabled]="product.stockQuantity === 0"
+              (click)="addToCart()">
+              <i class="bi bi-cart-plus me-2"></i>
+              {{ product.stockQuantity === 0 ? 'Out of Stock' : 'Add to Cart' }}
+            </button>
+            
+            <!-- Add to Wishlist Button (New action) -->
+            <!-- Use a heart icon and call the new method -->
+            <button
+              class="btn btn-outline-danger btn-lg rounded-3 py-3 fw-bold d-flex align-items-center justify-content-center"
+              style="width: 70px; min-width: 50px;"
+              [disabled]="!product.id"
+              (click)="addToWishlist(product.id)"
+              title="Add to Wishlist">
+              <!-- Use bi-heart-fill if the item is already in the wishlist (requires state logic) -->
+              <i class="bi bi-heart fs-4"></i>
+            </button>
+        </div>
+        <!-- END: NEW WISHLIST/CART ACTION BLOCK -->
+
       </div>
     </div>
   </div>

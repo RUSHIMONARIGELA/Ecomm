@@ -73,8 +73,9 @@
                     <!-- Delete Button -->
                     <button
                       class="btn btn-outline-danger btn-sm"
-                      (click)="deleteOrder(order.id)"
-                      [disabled]="submitting"
+                      (click)="deleteOrder(order)"
+                      [disabled]="submitting || order.status !== 'DELIVERED'"
+                      [title]="order.status !== 'DELIVERED' ? 'Orders can only be deleted after delivery' : 'Delete this order'"
                     >
                       <span
                         *ngIf="submitting"
@@ -82,8 +83,7 @@
                         role="status"
                         aria-hidden="true"
                       ></span>
-                      <i data-lucide="trash-2" class="icon-small me-1"></i
-                      >Delete
+                      <i data-lucide="trash-2" class="icon-small me-1"></i>Delete
                     </button>
                   </td>
                 </tr>

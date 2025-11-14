@@ -73,7 +73,7 @@ public class EmailServiceImpl implements EmailService {
         String subject = "Your 2FA Verification Code for Ecomm App";
         String body = "Hello,\n\n"
                     + "Your two-factor authentication code is: " + code + "\n\n"
-                    + "This code is valid for " + validityMinutes + " minutes. Do not share it with anyone.\n\n" // Use parameter
+                    + "This code is valid for " + validityMinutes + " minutes. Do not share it with anyone.\n\n" 
                     + "If you did not request this code, please ignore this email.\n\n"
                     + "Thank you,\n"
                     + "Ecomm App Team";

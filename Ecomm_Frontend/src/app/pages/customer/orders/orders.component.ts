@@ -6,6 +6,7 @@ import { HttpClient, HttpClientModule, HttpErrorResponse } from '@angular/common
 import { AuthService } from '../../../services/auth.service';
 
 import { OrderService } from '../../../services/order.service';
+import { getFriendlyError } from '../../../utils/error-utils';
 import { OrderDTO } from '../../../models/order-models';
 
 @Component({
@@ -47,14 +48,13 @@ orders: OrderDTO[] = [];
           this.orders = data;
           this.loadingOrders = false;
         },
-        error: (error: HttpErrorResponse) => {
-          this.ordersError = 'Failed to load orders. Please try again.';
+        error: (error: any) => {
           this.loadingOrders = false;
           console.error('OrdersComponent: Error fetching orders:', error);
-          if (error.status === 404) {
+          if (error?.status === 404) {
             this.ordersError = 'No orders found for this customer.';
-          } else if (error.error && error.error.message) {
-            this.ordersError = `Failed to load orders: ${error.error.message}`;
+          } else {
+            this.ordersError = getFriendlyError(error, 'Failed to load orders. Please try again.');
           }
         },
       });
@@ -117,9 +117,10 @@ orders: OrderDTO[] = [];
         this.invoiceStatus.downloadingId = null;
         this.invoiceStatus.message = `Invoice for Order #${orderId} downloaded successfully.`;
       },
-      error: (err: HttpErrorResponse) => {
+      error: (err: any) => {
         this.invoiceStatus.downloadingId = null;
-        this.invoiceStatus.message = `Failed to download invoice: ${err.statusText || 'An unknown error occurred'}`;
+        const friendly = getFriendlyError(err, err.statusText || 'Failed to download invoice.');
+        this.invoiceStatus.message = `Failed to download invoice: ${friendly}`;
         console.error('Failed to download invoice', err);
       }
     });

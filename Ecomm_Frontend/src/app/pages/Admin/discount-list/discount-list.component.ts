@@ -4,6 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { DiscountDTO, DiscountService } from '../../../services/discount.service';
 import { HttpErrorResponse } from '@angular/common/http';
+import Swal from 'sweetalert2';
 
 @Component({
   selector: 'app-discount-list',
@@ -32,7 +33,13 @@ discounts: DiscountDTO[] = [];
       },
       error: (error: HttpErrorResponse) => {
         console.error('Error fetching discounts:', error);
-        this.errorMessage = 'Failed to load discounts. Please try again.';
+
+        Swal.fire({
+          icon:"error",
+          title:"oops..",
+          text:"Failed to load discounts. Please try again."
+        });
+        // this.errorMessage = 'Failed to load discounts. Please try again.';
       }
     });
   }
@@ -41,7 +48,12 @@ discounts: DiscountDTO[] = [];
     if (confirm('Are you sure you want to delete this discount code?')) {
       this.discountService.deleteDiscount(id).subscribe({
         next: () => {
-          this.successMessage = 'Discount deleted successfully!';
+          Swal.fire({
+            icon:"success",
+            title:"Good Job",
+            text:"Discount deleted successfully!"
+          });
+          // this.successMessage = 'Discount deleted successfully!';
           this.errorMessage = null;
           this.loadDiscounts();
           setTimeout(() => this.successMessage = null, 3000); 

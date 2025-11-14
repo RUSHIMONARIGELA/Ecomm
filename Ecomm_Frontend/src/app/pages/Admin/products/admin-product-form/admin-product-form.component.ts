@@ -15,6 +15,7 @@ import { HttpErrorResponse } from '@angular/common/http';
 import { CategoryService } from '../../../../services/category.service';
 import { CategoryDTO } from '../../../../models/category-models'; 
 import { ProductDTO } from '../../../../models/product.model';
+import Swal from 'sweetalert2';
 
 @Component({
   selector: 'app-admin-product-form',
@@ -87,7 +88,12 @@ export class AdminProductFormComponent implements OnInit {
       },
       error: (error: HttpErrorResponse) => {
         console.error('Error fetching categories:', error);
-        this.errorMessage = 'Failed to load categories. Please try again.';
+        Swal.fire({
+          icon:"error",
+          title:"oops..",
+          text:"Failed to load categories. Please try again."
+        });
+        // this.errorMessage = 'Failed to load categories. Please try again.';
       },
     });
   }
@@ -105,7 +111,12 @@ export class AdminProductFormComponent implements OnInit {
         });
       },
       error: (error: HttpErrorResponse) => {
-        this.errorMessage = 'Failed to load product details.';
+        Swal.fire({
+          icon:"error",
+          title:"oops..",
+          text:"Failed to load product details."
+        });
+        // this.errorMessage = 'Failed to load product details.';
         console.error('Error loading product:', error);
       },
     });
@@ -118,6 +129,9 @@ export class AdminProductFormComponent implements OnInit {
 
     if (this.productForm.invalid) {
       this.productForm.markAllAsTouched();
+      Swal.fire({
+        
+      });
       this.errorMessage = 'Please correct the highlighted errors in the form.';
       this.submitting = false;
       return;

@@ -1,0 +1,94 @@
+/* Styling for the Wishlist Component */
+
+/* Main Card Container */
+.card {
+    /* Ensures rounded corners are prominent and removes default border */
+    border: none;
+    border-radius: 1.5rem !important; 
+    overflow: hidden;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+/* Card Header */
+.card-header {
+    background-color: #ffffff;
+    border-bottom: 2px solid #f3f4f6 !important; /* Light separator */
+    color: #1f2937; /* Dark text */
+}
+
+/* List Items (Individual Wishlist Items) */
+.list-group-item {
+    background-color: #ffffff;
+    border-color: #e5e7eb;
+    transition: background-color 0.2s ease, transform 0.1s ease;
+    align-items: center;
+}
+
+.list-group-item:hover {
+    background-color: #f9fafb; /* Subtle light background on hover */
+    transform: translateX(3px); /* Gives a feeling of movement/interaction */
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+/* Product Image Thumbnail */
+.img-thumbnail {
+    border: 1px solid #d1d5db;
+    border-radius: 0.5rem;
+    padding: 0;
+    transition: all 0.3s;
+}
+
+/* Product Name Link */
+.hover-link {
+    color: #1f2937;
+    transition: color 0.2s;
+}
+.hover-link:hover {
+    color: #3b82f6; /* A clean blue hover color */
+}
+
+/* Buttons: Add to Cart (Success) */
+.btn-outline-success {
+    color: #10b981; /* Tailwind green-500 equivalent */
+    border-color: #10b981;
+    transition: all 0.2s;
+}
+.btn-outline-success:hover {
+    background-color: #10b981;
+    color: white;
+    box-shadow: 0 4px 6px rgba(16, 185, 129, 0.3); /* Green shadow on hover */
+}
+
+/* Buttons: Remove (Danger) */
+.btn-outline-danger {
+    color: #ef4444; /* Tailwind red-500 equivalent */
+    border-color: #ef4444;
+    transition: all 0.2s;
+}
+.btn-outline-danger:hover {
+    background-color: #ef4444;
+    color: white;
+    box-shadow: 0 4px 6px rgba(239, 68, 68, 0.3); /* Red shadow on hover */
+}
+
+/* Responsive adjustments for mobile view (stacking actions) */
+@media (max-width: 768px) {
+    /* Change item layout to stack vertically */
+    .list-group-item {
+        flex-direction: column;
+        align-items: flex-start !important;
+    }
+    /* Add space between image/details and actions */
+    .flex-grow-1 {
+        margin-top: 0.5rem;
+        margin-bottom: 0.5rem;
+    }
+    /* Action buttons should stack vertically on small screens */
+    .flex-md-row {
+        flex-direction: column !important;
+        width: 100%;
+    }
+    .flex-md-row button {
+        width: 100%; /* Make buttons full width */
+    }
+}

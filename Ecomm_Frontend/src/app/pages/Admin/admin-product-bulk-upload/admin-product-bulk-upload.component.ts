@@ -6,6 +6,7 @@ import { CategoryDTO } from '../../../models/category-models';
 import { ProductService } from '../../../services/product.service';
 import { CategoryService } from '../../../services/category.service';
 import { Router } from '@angular/router';
+import Swal from 'sweetalert2';
 
 
 @Component({
@@ -41,7 +42,12 @@ export class AdminProductBulkUploadComponent implements OnInit {
         },
         error: (error: HttpErrorResponse) => {
           console.error('Error fetching categories for bulk upload:', error); 
-          this.errorMessage = 'Failed to load categories. Check console for details.'; 
+          Swal.fire({
+            icon:"error",
+            title:"oops..",
+            text:"Failed to load categories. Check console for details."
+          });
+          // this.errorMessage = 'Failed to load categories. Check console for details.'; 
         }
       }
     );
@@ -60,11 +66,23 @@ export class AdminProductBulkUploadComponent implements OnInit {
 
   onUpload(): void {
     if (!this.selectedFile) {
-      this.errorMessage = 'Please select a CSV file to upload.';
+
+      Swal.fire({
+        icon:"error",
+        title:"oops..",
+        text:"Please select a CSV file to upload."
+      });
+      // this.errorMessage = 'Please select a CSV file to upload.';
       return;
     }
     if (this.selectedFile.type !== 'text/csv' && !this.selectedFile.name.endsWith('.csv')) {
-      this.errorMessage = 'Invalid file type. Please select a CSV File.'; 
+
+      Swal.fire({
+        icon:"error",
+        title:"oops..",
+        text:"Invalid file type. Please select a CSV File."
+      });
+      // this.errorMessage = 'Invalid file type. Please select a CSV File.'; 
       this.selectedFile = null;
       return;
     }
@@ -94,7 +112,13 @@ export class AdminProductBulkUploadComponent implements OnInit {
         } else if (error.error && error.error.message) {
           this.errorMessage = `Upload failed: ${error.error.message}`;
         } else {
-          this.errorMessage = 'An unknown error occurred during upload. Check console for details.';
+
+          Swal.fire({
+            icon:"error",
+            title:"oops..",
+            text:"An unknown error occurred during upload. Check console for details."
+          });
+          // this.errorMessage = 'An unknown error occurred during upload. Check console for details.';
         }
       }
     });

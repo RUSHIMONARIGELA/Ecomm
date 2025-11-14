@@ -27,7 +27,6 @@ import io.jsonwebtoken.security.Keys;
 public class JwtUtil {
 
    
-
     public String generateToken(UserDetails userDetails) {
         Map<String, Object> claims = new HashMap<>();
 

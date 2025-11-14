@@ -1,6 +1,7 @@
 import { inject, Injectable } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
-import { Observable } from 'rxjs';
+import { Observable, throwError } from 'rxjs';
+import { catchError } from 'rxjs/operators';
 import { AuthService } from './auth.service';
 import { OrderDTO } from '../models/order-models';
 
@@ -25,46 +26,89 @@ export class OrderService {
     });
   }
 
+  
+  private handleError(operation: string) {
+    return (error: any) => {
+      const serverMessage = error?.error?.message || error?.message || '';
+      let friendly = `${operation} failed.`;
+
+      if (error?.status) {
+        switch (error.status) {
+          case 400:
+            friendly = `${operation} failed: Bad request. ${serverMessage}`.trim();
+            break;
+          case 401:
+            friendly = `${operation} failed: Unauthorized. Please login again.`;
+            break;
+          case 403:
+            friendly = `${operation} failed: You don't have permission to perform this action.`;
+            break;
+          case 404:
+            friendly = `${operation} failed: Resource not found.`;
+            break;
+          case 409:
+            friendly = `${operation} failed: Conflict. ${serverMessage}`.trim();
+            break;
+          case 500:
+            friendly = `${operation} failed: Server error. Please try again later.`;
+            break;
+          default:
+            friendly = `${operation} failed: ${serverMessage || 'Unknown error.'}`.trim();
+        }
+      } else {
+        friendly = `${operation} failed: ${serverMessage || 'Network error or server is unreachable.'}`;
+      }
+
+      return throwError(() => ({ status: error?.status || 0, message: friendly, originalError: error }));
+    };
+  }
+
   getOrdersByCustomerId(customerId: number): Observable<OrderDTO[]> {
     const headers = this.getAuthHeaders();
-    return this.http.get<OrderDTO[]>(`${this.baseUrl}/customer/${customerId}`, {
-      headers,
-    });
+    return this.http.get<OrderDTO[]>(`${this.baseUrl}/customer/${customerId}`, { headers }).pipe(
+      catchError(this.handleError('Load customer orders'))
+    );
   }
 
   getOrderById(orderId: number): Observable<OrderDTO> {
     const headers = this.getAuthHeaders();
-    return this.http.get<OrderDTO>(`${this.baseUrl}/${orderId}`, { headers });
+    return this.http.get<OrderDTO>(`${this.baseUrl}/${orderId}`, { headers }).pipe(
+      catchError(this.handleError('Load order'))
+    );
   }
 
   createOrder(orderDTO: OrderDTO): Observable<OrderDTO> {
     const headers = this.getAuthHeaders();
-    return this.http.post<OrderDTO>(this.baseUrl, orderDTO, { headers });
+    return this.http.post<OrderDTO>(this.baseUrl, orderDTO, { headers }).pipe(
+      catchError(this.handleError('Create order'))
+    );
   }
 
   getAllOrders(): Observable<OrderDTO[]> {
     const headers = this.getAuthHeaders();
-    return this.http.get<OrderDTO[]>(this.baseUrl, { headers });
+    return this.http.get<OrderDTO[]>(this.baseUrl, { headers }).pipe(
+      catchError(this.handleError('Load all orders'))
+    );
   }
 
   deleteOrder(orderId: number): Observable<void> {
     const headers = this.getAuthHeaders();
-    return this.http.delete<void>(`${this.baseUrl}/${orderId}`, { headers });
+    return this.http.delete<void>(`${this.baseUrl}/${orderId}`, { headers }).pipe(
+      catchError(this.handleError('Delete order'))
+    );
   }
 
   createOrderFromCart(customerId: number): Observable<OrderDTO> {
     const headers = this.getAuthHeaders();
-    return this.http.post<OrderDTO>(
-      `${this.baseUrl}/from-cart/${customerId}`,
-      null,
-      { headers }
+    return this.http.post<OrderDTO>(`${this.baseUrl}/from-cart/${customerId}`, null, { headers }).pipe(
+      catchError(this.handleError('Create order from cart'))
     );
   }
 
   updateOrder(orderId: number, orderDTO: OrderDTO): Observable<OrderDTO> {
     const headers = this.getAuthHeaders();
-    return this.http.put<OrderDTO>(`${this.baseUrl}/${orderId}`, orderDTO, {
-      headers,
-    });
+    return this.http.put<OrderDTO>(`${this.baseUrl}/${orderId}`, orderDTO, { headers }).pipe(
+      catchError(this.handleError('Update order'))
+    );
   }
 }

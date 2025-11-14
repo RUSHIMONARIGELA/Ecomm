@@ -3,11 +3,13 @@ package com.example.Ecomm.entitiy;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Entity;
 import jakarta.persistence.OneToOne;
+import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 import jakarta.persistence.PrimaryKeyJoinColumn;
 
 import java.time.LocalDateTime;
 import java.util.Set;
+import java.util.HashSet;
 
 @Entity
 @Table(name = "customer_user")
@@ -20,36 +22,40 @@ public class Customer extends User {
     @OneToOne(mappedBy = "customer", cascade = CascadeType.ALL, orphanRemoval = true, optional = true)
     private Cart cart;
 
+    @OneToMany(mappedBy = "customer", cascade = CascadeType.ALL, orphanRemoval = true)
+    private Set<WishlistItem> wishlistItems = new HashSet<>();
+
+
     public Customer() {
         super();
     }
 
     public Customer(Long id, String username, String password, String email, String phoneNumber,
-                    LocalDateTime createdAt, LocalDateTime updatedAt, boolean active,
-                    boolean is2faEnabled, String twoFactorCode, LocalDateTime twoFactorCodeExpiry, 
-                    Set<Role> roles) {
+                            LocalDateTime createdAt, LocalDateTime updatedAt, boolean active,
+                            boolean is2faEnabled, String twoFactorCode, LocalDateTime twoFactorCodeExpiry, 
+                            Set<Role> roles) {
         super(id, username, password, email, phoneNumber, createdAt, updatedAt, active,
-              is2faEnabled, twoFactorCode, twoFactorCodeExpiry, 
-              roles);
+                  is2faEnabled, twoFactorCode, twoFactorCodeExpiry, 
+                  roles);
     }
 
     public Customer(Long id, String username, String password, String email, String phoneNumber,
-                    LocalDateTime createdAt, LocalDateTime updatedAt, boolean active,
-                    boolean is2faEnabled, String twoFactorCode, LocalDateTime twoFactorCodeExpiry, 
-                    Set<Role> roles, Profile profile, Cart cart) {
+                            LocalDateTime createdAt, LocalDateTime updatedAt, boolean active,
+                            boolean is2faEnabled, String twoFactorCode, LocalDateTime twoFactorCodeExpiry, 
+                            Set<Role> roles, Profile profile, Cart cart) {
         super(id, username, password, email, phoneNumber, createdAt, updatedAt, active,
-              is2faEnabled, twoFactorCode, twoFactorCodeExpiry, 
-              roles);
+                  is2faEnabled, twoFactorCode, twoFactorCodeExpiry, 
+                  roles);
         this.profile = profile;
         this.cart = cart;
     }
 
 
     public Customer(Long id, String username, String password, String email, String phoneNumber,
-                    LocalDateTime createdAt, LocalDateTime updatedAt, boolean active, Set<Role> roles) {
+                            LocalDateTime createdAt, LocalDateTime updatedAt, boolean active, Set<Role> roles) {
         super(id, username, password, email, phoneNumber, createdAt, updatedAt, active,
-              false, null, null, 
-              roles);
+                  false, null, null, 
+                  roles);
     }
 
     public Profile getProfile() {
@@ -73,6 +79,15 @@ public class Customer extends User {
             cart.setCustomer(this);
         }
     }
+    
+    public Set<WishlistItem> getWishlistItems() {
+        return wishlistItems;
+    }
+
+    public void setWishlistItems(Set<WishlistItem> wishlistItems) {
+        this.wishlistItems = wishlistItems;
+    }
+
 
     @Override
     public int hashCode() {
@@ -80,6 +95,7 @@ public class Customer extends User {
         int result = super.hashCode();
         result = prime * result + ((profile == null) ? 0 : profile.hashCode());
         result = prime * result + ((cart == null) ? 0 : cart.hashCode());
+        result = prime * result + ((wishlistItems == null) ? 0 : wishlistItems.hashCode());
         return result;
     }
 
@@ -108,6 +124,7 @@ public class Customer extends User {
     @Override
     public String toString() {
         return "Customer [" + super.toString() + ", profileId=" + (profile != null ? profile.getId() : "null")
-                + ", cartId=" + (cart != null ? cart.getId() : "null") + "]";
+                + ", cartId=" + (cart != null ? cart.getId() : "null") 
+                + ", wishlistCount=" + (wishlistItems != null ? wishlistItems.size() : "0") + "]";
     }
 }

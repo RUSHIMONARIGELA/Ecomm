@@ -127,16 +127,71 @@ public class OrderServiceImpl implements OrderService {
                 .collect(Collectors.toList());
     }
 
+//    @Override
+//    @Transactional
+//    public OrderDTO updateOrderStatus(Long id, String status) {
+//        Order order = orderRepository.findById(id)
+//                .orElseThrow(() -> new ResourceNotFoundException("Order", "id", id));
+//        try {
+//            order.setStatus(OrderStatus.valueOf(status.toUpperCase()));
+//        } catch (IllegalArgumentException e) {
+//            throw new IllegalArgumentException("Invalid order status: " + status);
+//        }
+//        Order updatedOrder = orderRepository.save(order);
+//        return mapOrderToDTO(updatedOrder);
+//    }
+ // OrderServiceImpl.java
+    @Override
+    @Transactional
+    public OrderDTO updateOrderFull(Long orderId, OrderDTO updatedDetails) {
+        Order order = orderRepository.findById(orderId)
+            .orElseThrow(() -> new ResourceNotFoundException("Order", "id", orderId));
+
+        String newStatus = updatedDetails.getStatus();
+
+        // 1. Perform validation (status transition checks)
+        if (order.getStatus().name().equals(newStatus)) {
+            // No change needed, return existing or simply save
+        } else if (order.getStatus() == OrderStatus.DELIVERED || order.getStatus() == OrderStatus.CANCELLED) {
+            throw new IllegalArgumentException("Cannot update status for a finalized order.");
+        }
+
+        // 2. Set the new status
+        try {
+            order.setStatus(OrderStatus.valueOf(newStatus.toUpperCase()));
+        } catch (IllegalArgumentException e) {
+            throw new IllegalArgumentException("Invalid order status value provided: " + newStatus);
+        }
+
+        // 3. Save and return
+        Order updatedOrder = orderRepository.save(order);
+        return mapOrderToDTO(updatedOrder);
+    }
+    
     @Override
     @Transactional
     public OrderDTO updateOrderStatus(Long id, String status) {
         Order order = orderRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Order", "id", id));
-        try {
-            order.setStatus(OrderStatus.valueOf(status.toUpperCase()));
-        } catch (IllegalArgumentException e) {
-            throw new IllegalArgumentException("Invalid order status: " + status);
+
+        // 1. **CRITICAL FIX: Check if the order is already in a final state**
+        if (order.getStatus() == OrderStatus.DELIVERED || order.getStatus() == OrderStatus.CANCELLED) {
+            throw new IllegalArgumentException("Cannot update status for an order that is already " + order.getStatus().name());
         }
+
+        OrderStatus newStatus;
+        try {
+            // 2. Convert and validate the new status string (original code logic)
+            newStatus = OrderStatus.valueOf(status.toUpperCase());
+        } catch (IllegalArgumentException e) {
+            // This catch block handles cases where the status string itself is not a valid enum member (e.g., "SHIPPEDX")
+            throw new IllegalArgumentException("Invalid order status value provided: " + status);
+        }
+
+        // 3. Optional: Add more specific transition checks (e.g., only PENDING can go to SHIPPED)
+        // For now, the critical fix (Step 1) should solve your immediate log error.
+        
+        order.setStatus(newStatus);
         Order updatedOrder = orderRepository.save(order);
         return mapOrderToDTO(updatedOrder);
     }

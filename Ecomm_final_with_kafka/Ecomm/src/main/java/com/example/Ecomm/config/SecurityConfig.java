@@ -109,6 +109,8 @@ public class SecurityConfig {
                         .hasAnyAuthority(SecurityConstants.ROLE_ADMIN, SecurityConstants.ROLE_CUSTOMER)
                         .requestMatchers(HttpMethod.POST, "/api/discounts/apply-coupon/**", "/api/discounts/remove-coupon/**")
                         .hasAnyAuthority(SecurityConstants.ROLE_CUSTOMER)
+                        .requestMatchers(HttpMethod.GET, "/api/discounts/check-duplicate/**")
+                        .hasAnyAuthority(SecurityConstants.ROLE_ADMIN)
                         
                         .requestMatchers("/api/discounts/**").hasAuthority(SecurityConstants.ROLE_ADMIN)
 

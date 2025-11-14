@@ -1,4 +1,4 @@
-    package com.example.Ecomm.config;
+   package com.example.Ecomm.config;
 
 
     import com.example.Ecomm.service.UserService;
@@ -20,7 +20,7 @@
     public class JwtFilter extends OncePerRequestFilter {
 
         @Autowired
-        private JwtUtil jwtService;
+       private JwtUtil jwtService;
 
         @Autowired
         private UserService userService;
