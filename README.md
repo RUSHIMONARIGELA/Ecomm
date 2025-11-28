@@ -2,7 +2,7 @@ E-Commerce POC (Angular + Spring Boot)
 
 This repository contains the Proof of Concept (POC) for a full-stack e-commerce application, featuring a dynamic product catalog, a shopping cart, and a user wishlist.
 
-The backend leverages Spring Boot with MYSQL as the primary data store, Kafka for asynchronous messaging (e.g., order processing), and ElasticSearch for high-speed product search and indexing. The frontend is built with Angular and styled using Bootstrap.
+The backend leverages Spring Boot with MySQL as the primary data store, Kafka for asynchronous messaging (e.g., order processing), and ElasticSearch for high-speed product search and indexing. The frontend is built with Angular and styled using Bootstrap/Tailwind.
 
 The goal of this repository is to provide a complete, runnable environment for further development and scaling.
 
@@ -22,24 +22,25 @@ Java Development Kit (JDK): (Version 17+)
 
 Maven: (For the backend server)
 
+Database: MySQL (or compatible)
 
-Database: MySQL
+Messaging Queue: A locally running Kafka instance.
+
+Search Engine: A locally running ElasticSearch instance.
 
 1. Infrastructure Setup (Database, Kafka, ElasticSearch)
 
+Before starting the backend, ensure all required infrastructure services are running:
 
-Start Services: If a docker-compose.yml file is provided (not included here, but assumed for production environment setup), run:
+Start Services: Manually start your local instances of MySQL, Kafka, and ElasticSearch.
 
-docker compose up -d postgres kafka elasticsearch
+Database Initialization: Connect to your running MySQL instance and execute the schema creation script:
 
-
-Database Initialization: Connect to your running PostgreSQL instance and execute the schema creation script:
-
-# Example command using psql
-psql -d ecommerce_db -f db-scripts.sql
+# Example command for MySQL
+mysql -u [your_user] -p ecommerce_db < db-scripts.sql
 
 
-(Note: Ensure your database is named ecommerce_db or adjust the connection string.)
+(Note: Ensure your database is named ecommerce_db and use the correct user/password combination.)
 
 2. Backend Server Setup (Spring Boot)
 
@@ -50,7 +51,7 @@ Navigate to the backend directory (assumed to be ecommerce-backend/):
 cd ecommerce-backend
 
 
-Configure Environment: Copy the example environment file and fill in your actual credentials, ensuring Kafka and ElasticSearch connection details are correct.
+Configure Environment: Copy the example environment file and fill in your actual credentials, ensuring MySQL, Kafka, and ElasticSearch connection details are correct.
 
 cp ../.env.example .env
 
