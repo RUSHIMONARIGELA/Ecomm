@@ -18,8 +18,7 @@ A full-stack Proof of Concept (POC) for a scalable e-commerce platform built usi
 Follow the steps below to run the application locally.
 
 ---
-1.Clone the repository
-    ```bash
+1.Clone the repository 
 
     git clone https://github.com/RUSHIMONARIGELA/Ecomm.git
 
