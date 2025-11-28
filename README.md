@@ -2,7 +2,7 @@ E-Commerce POC (Angular + Spring Boot)
 
 This repository contains the Proof of Concept (POC) for a full-stack e-commerce application, featuring a dynamic product catalog, a shopping cart, and a user wishlist.
 
-The backend leverages Spring Boot with PostgreSQL as the primary data store, Kafka for asynchronous messaging (e.g., order processing), and ElasticSearch for high-speed product search and indexing. The frontend is built with Angular and styled using Bootstrap/Tailwind.
+The backend leverages Spring Boot with MYSQL as the primary data store, Kafka for asynchronous messaging (e.g., order processing), and ElasticSearch for high-speed product search and indexing. The frontend is built with Angular and styled using Bootstrap.
 
 The goal of this repository is to provide a complete, runnable environment for further development and scaling.
 
@@ -22,13 +22,11 @@ Java Development Kit (JDK): (Version 17+)
 
 Maven: (For the backend server)
 
-Containerization: Docker/Docker Compose (Highly recommended for running Kafka and ElasticSearch easily)
 
-Database: PostgreSQL (or compatible)
+Database: MySQL
 
 1. Infrastructure Setup (Database, Kafka, ElasticSearch)
 
-It is highly recommended to use Docker Compose to spin up the required services.
 
 Start Services: If a docker-compose.yml file is provided (not included here, but assumed for production environment setup), run:
 
