@@ -2,14 +2,14 @@
 
 A full-stack Proof of Concept (POC) for a scalable e-commerce platform built using **Angular**, **Spring Boot**, **MySQL**, **Kafka**, and **ElasticSearch**.
 
-## 📦 Features
+##  Features
 
-- **Dynamic Product Catalog & Wishlist** — Angular front-end  
-- **Shopping Cart & Checkout Flow** — Angular  
-- **Scalable Backend API** — Spring Boot + MySQL  
-- **Asynchronous Processing** — Kafka (e.g., order fulfillment)  
-- **High-Speed Search** — ElasticSearch integration  
-- **End-to-End Runnable Environment** for development & scaling  
+- **Dynamic Product Catalog & Wishlist** 
+- **Shopping Cart & Checkout Flow**   
+- **Scalable Backend API**   
+- **Asynchronous Processing** — Kafka   
+- **High-Speed Search** - ElasticSearch
+
 
 ---
 
@@ -21,7 +21,9 @@ Follow the steps below to run the application locally.
 1.Clone the repository
     ```bash
 
+    git clone https://github.com/RUSHIMONARIGELA/Ecomm.git
 
+    
     2.Open MySQL and create a database
      CREATE DATABASE ecommerce_db;
      
