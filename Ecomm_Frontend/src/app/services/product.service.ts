@@ -71,9 +71,11 @@ export class ProductService {
     );
   }
 
-  uploadProductsCsv(formData: FormData): Observable<string> {
-    return this.http.post(`${this.baseUrl}/upload-csv`, formData, { responseType: 'text' });
-  }
+uploadProductsCsv(formData: FormData): Observable<any> {
+  // We remove responseType: 'text' because the backend now returns a JSON Map.
+  // This allows the frontend to access fields like response.batchId or response.message.
+  return this.http.post<any>(`${this.baseUrl}/upload-csv`, formData);
+}
 
   creareMultipleProducts(products: ProductDTO[]): Observable<ProductDTO[]> {
     const headers=this.getAuthHeaders();

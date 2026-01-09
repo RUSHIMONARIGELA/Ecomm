@@ -138,36 +138,55 @@ export class PaymentComponent implements OnInit {
   }
 
   // New method to generate UPI QR code
-  generateUpiQrCode(): void {
-    if (!this.order || !this.order.id || this.order.totalAmount === undefined || this.order.totalAmount === null) {
-      this.qrCodeError = 'Order details incomplete for UPI QR code generation.';
-      this.processingPayment = false;
-      return;
-    }
+ generateUpiQrCode(): void {
+    if (!this.orderId) return;
 
     this.loadingQrCode = true;
-    this.qrCodeError = null;
-
-    this.qrCodeService
-      .generateUpiQRCodeForPayment(this.order.totalAmount, 'INR', this.order.id)
-      .subscribe({
-        next: (qrCodeBlob: Blob) => {
-          // Convert the Blob to a URL that can be used in the image tag
-          const objectURL = URL.createObjectURL(qrCodeBlob);
-          this.upiQRCodeUrl = this.sanitizer.bypassSecurityTrustUrl(objectURL);
-          this.loadingQrCode = false;
-          this.processingPayment = false; // Stop the main processing loader
-          console.log('PaymentComponent: UPI QR code generated successfully.');
-        },
-        error: (error: any) => {
-          const friendly = getFriendlyError(error, 'Failed to generate UPI QR code. Please try again.');
-          this.qrCodeError = friendly;
-          this.loadingQrCode = false;
-          this.processingPayment = false;
-          console.error('PaymentComponent: Error generating UPI QR code:', error);
-        },
-      });
+    this.qrCodeService.generateUpiQRCodeForOrder(this.orderId).subscribe({
+      next: (qrCodeBlob: Blob) => {
+        const objectURL = URL.createObjectURL(qrCodeBlob);
+        this.upiQRCodeUrl = this.sanitizer.bypassSecurityTrustUrl(objectURL);
+        this.loadingQrCode = false;
+        this.processingPayment = false;
+      },
+      error: (error) => {
+        this.qrCodeError = getFriendlyError(error, 'Failed to generate QR code.');
+        this.loadingQrCode = false;
+        this.processingPayment = false;
+      },
+    });
   }
+
+  simulateUpiSuccess(): void {
+    if (!this.orderId) return;
+
+    this.processingPayment = true;
+    this.paymentService.simulateSuccess(this.orderId).subscribe({
+      next: (res: PaymentDTO) => {
+        this.paymentSuccessMessage = 'Payment Successful! Redirecting...';
+        this.processingPayment = false;
+        this.upiQRCodeUrl = null;
+
+        Swal.fire({
+          icon: 'success',
+          title: 'Payment Confirmed',
+          text: 'Order marked as PAID (Demo)',
+          timer: 2000,
+          showConfirmButton: false,
+          timerProgressBar: true
+        });
+
+        setTimeout(() => {
+          this.router.navigate(['/home/orders', this.orderId]);
+        }, 2000);
+      },
+      error: (err) => {
+        this.paymentErrorMessage = getFriendlyError(err, 'Simulation failed.');
+        this.processingPayment = false;
+      }
+    });
+  }
+
 
   private initiateRazorpayPayment(): void {
     if (!this.order || !this.order.id || this.order.totalAmount === undefined || this.order.totalAmount === null) {

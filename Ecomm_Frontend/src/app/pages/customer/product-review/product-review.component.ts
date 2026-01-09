@@ -32,7 +32,7 @@ export class ProductReviewComponent {
     if (this.productId) {
       this.loadReviews();
     }
-    this.newReview.username = this.authservice.getCurrentUsername() ?? 'Guest';
+    this.newReview.username = this.authservice.getTempUsername() ?? 'Guest';
   }
 
   loadReviews(): void {
@@ -68,7 +68,7 @@ export class ProductReviewComponent {
       productId: this.productId,
       rating: 0,
       reviewText: '',
-      username: this.authservice.getCurrentUsername() ?? 'Guest'
+      username: this.authservice.getTempUsername() ?? 'Guest'
     };
   }
 

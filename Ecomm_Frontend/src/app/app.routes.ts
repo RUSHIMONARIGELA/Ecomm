@@ -25,7 +25,7 @@ import { AdminCategoryComponent } from './pages/Admin/admin-category/admin-categ
 import { AdminProductBulkUploadComponent } from './pages/Admin/admin-product-bulk-upload/admin-product-bulk-upload.component';
 import { DiscountListComponent } from './pages/Admin/discount-list/discount-list.component';
 import { DiscountFormComponent } from './pages/Admin/discount-form/discount-form.component';
-import { UserManagementComponent } from './pages/Admin/user-management/user-management.component'; // Keep this import
+import { UserManagementComponent } from './pages/Admin/user-management/user-management.component'; 
 import { ProductDetailsComponent } from './pages/customer/product-details/product-details.component';
 import { ProductReviewComponent } from './pages/customer/product-review/product-review.component';
 import { WishlistComponent } from './pages/customer/wishlist/wishlist.component';

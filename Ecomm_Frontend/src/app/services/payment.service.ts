@@ -17,6 +17,7 @@ export class PaymentService {
 
   private http = inject(HttpClient);
   private authService = inject(AuthService);
+  
   constructor() {}
 
   private getAuthHeaders(): HttpHeaders {
@@ -28,6 +29,18 @@ export class PaymentService {
       Authorization: `Bearer ${accessToken}`,
       'Content-Type': 'application/json',
     });
+  }
+
+  /**
+   * Demo Mode: Simulates a successful payment for UPI QR flow
+   */
+  simulateSuccess(orderId: number): Observable<PaymentDTO> {
+    const headers = this.getAuthHeaders();
+    return this.http.post<PaymentDTO>(
+      `${this.baseUrl}/simulate-success/${orderId}`,
+      {},
+      { headers }
+    );
   }
 
   processPayment(

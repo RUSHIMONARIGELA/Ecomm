@@ -1,162 +1,199 @@
-/* Overall background for the login page */
+/* 1. BACKGROUND LAYER */
 .login-background {
-  /* background: linear-gradient(to right, #6a11cb, #2575fc);  */
-
-  background-image: url(../../../Assests/v796-nunny-03b.jpg);
+  background-image: url('../../../Assests/v796-nunny-03b.jpg');
   background-size: cover;
-  
-  min-height: 100vh; /* Full viewport height */
+  background-position: center;
+  background-repeat: no-repeat;
+  min-height: 100vh;
   display: flex;
   justify-content: center;
   align-items: center;
-  padding: 20px; /* Add some padding around the container */
-  box-sizing: border-box; /* Include padding in element's total width and height */
+  padding: 20px;
+  position: relative;
+  box-sizing: border-box;
 }
 
-/* Container for the login form */
+/* Dark overlay to make the glass card stand out */
+.login-background::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(0, 0, 0, 0.5); 
+  z-index: 0;
+}
+
+/* 2. THE GLASS CONTAINER */
 .container {
-  background-color: rgba(255, 255, 255, 0.95); /* Slightly transparent white background */
+  position: relative;
+  z-index: 1;
+  /* Glassmorphism Effect */
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.05));
+  backdrop-filter: blur(15px);
+  -webkit-backdrop-filter: blur(15px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  
   padding: 40px;
-  border-radius: 15px; /* More rounded corners */
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2); /* Stronger shadow for depth */
+  border-radius: 20px;
+  box-shadow: 0 15px 35px rgba(0, 0, 0, 0.5);
   width: 100%;
-  max-width: 450px; /* Max width for larger screens */
-  text-align: center; /* Center text inside the container */
+  max-width: 450px;
+  text-align: center;
 }
 
 .container h2 {
-  color: #333;
+  color: #ffffff;
+  text-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
   margin-bottom: 30px;
   font-weight: 700;
-  font-size: 2.2em;
+  font-size: 2.2rem;
 }
 
-/* Form group styling */
+/* 3. FORM GROUP & LABELS */
 .mb-3 {
   margin-bottom: 20px;
-  text-align: left; /* Align labels and inputs to the left */
-}
-
-.mb-3 label {
-  display: block; /* Make label take full width */
-  margin-bottom: 8px;
-  font-weight: 600;
-  color: #555;
-  font-size: 1.1em;
-}
-
-/* Input field styling */
-.form-control {
-  width: 100%;
-  padding: 12px 15px;
-  border: 1px solid #ddd;
-  border-radius: 8px; /* Rounded input fields */
-  font-size: 1em;
-  transition: border-color 0.3s ease, box-shadow 0.3s ease;
-}
-
-.form-control:focus {
-  border-color: #6a11cb;
-  box-shadow: 0 0 0 0.25rem rgba(106, 17, 203, 0.25); /* Focus glow matching background */
-  outline: none;
-}
-
-/* Button styling */
-.btn {
-  padding: 12px 25px;
-  border-radius: 8px;
-  font-size: 1.1em;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  border: none; /* Remove default button border */
-}
-
-.btn-primary {
-  background-color: #2575fc;
-  color: white;
-  box-shadow: 0 4px 10px rgba(37, 117, 252, 0.3);
-}
-
-.btn-primary:hover {
-  background-color: #1a5bbd;
-  box-shadow: 0 6px 15px rgba(37, 117, 252, 0.4);
-  transform: translateY(-2px);
-}
-
-.btn-success { /* Style for Verify Code button */
-  background-color: #28a745;
-  color: white;
-  box-shadow: 0 4px 10px rgba(40, 167, 69, 0.3);
-}
-
-.btn-success:hover {
-  background-color: #218838;
-  box-shadow: 0 6px 15px rgba(40, 167, 69, 0.4);
-  transform: translateY(-2px);
-}
-
-.btn-secondary { /* Style for Cancel button */
-  background-color: #6c757d;
-  color: white;
-  box-shadow: 0 4px 10px rgba(108, 117, 125, 0.3);
-}
-
-.btn-secondary:hover {
-  background-color: #5a6268;
-  box-shadow: 0 6px 15px rgba(108, 117, 125, 0.4);
-  transform: translateY(-2px);
-}
-
-/* Link styling */
-p a {
-  color: #2575fc; /* Link color matching theme */
-  text-decoration: none;
-  font-weight: 600;
-  transition: color 0.3s ease;
-}
-
-p a:hover {
-  color: #1a5bbd;
-  text-decoration: underline;
-}
-
-/* Error message styling */
-.text-danger {
-  color: #dc3545;
-  margin-top: 15px;
-  font-weight: 500;
-}
-
-/* 2FA specific message styling */
-.alert-info {
-  background-color: #d1ecf1;
-  color: #0c5460;
-  border: 1px solid #bee5eb;
-  border-radius: 8px;
-  padding: 15px;
-  margin-bottom: 20px;
-  font-size: 1em;
   text-align: left;
 }
 
-/* Responsive adjustments */
-@media (max-width: 576px) {
-  .container {
-    padding: 25px;
-    margin: 15px;
-  }
+.mb-3 label {
+  display: block;
+  margin-bottom: 8px;
+  font-weight: 500;
+  color: #a5d8ff; /* Ice Blue Label */
+  font-size: 0.95rem;
+  letter-spacing: 0.5px;
+}
+/* 4. GLOSSY INPUT GROUP (The Container) */
+.glossy-input-group {
+  display: flex; /* Keeps input and button on the same line */
+  align-items: center;
+  background: rgba(0, 0, 0, 0.25) !important; /* Unified background */
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 10px;
+  overflow: hidden;
+  transition: all 0.3s ease;
+  width: 100%;
+}
 
-  .container h2 {
-    font-size: 1.8em;
-  }
+/* Ensure the input doesn't push the button out */
+.glossy-input-group .form-control {
+  flex: 1; /* Takes up all remaining space */
+  background: transparent !important;
+  border: none !important; /* Removes internal border that causes alignment issues */
+  color: white !important;
+  padding: 12px 15px;
+  box-shadow: none !important;
+}
 
-  .btn {
-    width: 100%;
-    margin-bottom: 10px; /* Stack buttons on small screens */
-  }
+/* Shared focus state for the whole group */
+.glossy-input-group:focus-within {
+  border-color: #2575fc;
+  box-shadow: 0 0 15px rgba(37, 117, 252, 0.4);
+  background: rgba(0, 0, 0, 0.35) !important;
+}
 
-  .btn-success, .btn-secondary {
-    margin-right: 0 !important; /* Override me-2 for stacking */
-  }
+/* 5. EYE TOGGLE BUTTON (Inside the group) */
+.eye-toggle {
+  background: transparent !important;
+  border: none !important;
+  color: #a5d8ff;
+  padding: 0 15px;
+  height: 100%; /* Match input height */
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: color 0.3s ease;
+}
+
+.eye-toggle:hover {
+  color: #ffffff;
+}
+
+/* 6. BUTTONS */
+.btn {
+  padding: 12px 25px;
+  border-radius: 10px;
+  font-weight: 600;
+  border: none;
+  transition: all 0.3s ease;
+  width: 100%; /* Full width login button */
+}
+
+.btn-primary {
+  background: linear-gradient(45deg, #2575fc, #6a11cb);
+  color: white;
+}
+
+.btn-primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(37, 117, 252, 0.4);
+  filter: brightness(1.1);
+}
+
+/* 7. TEXT & ALERTS */
+p, .text-dark {
+  color: rgba(255, 255, 255, 0.8) !important;
+}
+
+p a {
+  color: #a5d8ff;
+  text-decoration: none;
+  font-weight: 600;
+}
+
+.alert-info {
+  background: rgba(209, 236, 241, 0.1);
+  color: #d1ecf1;
+  border: 1px solid rgba(190, 229, 235, 0.2);
+  backdrop-filter: blur(5px);
+  border-radius: 10px;
+  padding: 15px;
+  margin-bottom: 20px;
+}
+
+.text-danger {
+  color: #ff7675 !important;
+  font-size: 0.9rem;
+  margin-top: 10px;
+}
+/* Ensure the standard input also looks glossy even if not in a group */
+.glossy-input-group {
+  background: rgba(0, 0, 0, 0.25);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 10px;
+  display: flex;
+  transition: all 0.3s ease;
+}
+
+.glossy-input-group .form-control {
+  border: none !important;
+  background: transparent !important;
+  color: white !important;
+  box-shadow: none !important;
+}
+
+.glossy-input-group:focus-within {
+  border-color: #2575fc;
+  box-shadow: 0 0 15px rgba(37, 117, 252, 0.4);
+}
+
+.register-link {
+  color: #a5d8ff !important;
+  text-decoration: none;
+  font-weight: bold;
+}
+
+.register-link:hover {
+  text-decoration: underline;
+  color: #ffffff !important;
+}
+
+/* Simple entry animation */
+.form-fade-in {
+  animation: fadeIn 0.5s ease-in-out;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
 }

@@ -118,8 +118,11 @@ export class DiscountFormComponent implements OnInit {
     if (this.isEditMode && this.discount.id) {
       this.discountService.updateDiscount(this.discount.id, discountToSend).subscribe({
         next: () => {
-          Swal.fire({});
-          this.successMessage = 'Discount updated successfully!';
+          Swal.fire({
+            icon: 'success',
+            title: 'Success!',
+            text: 'Discount updated successfully!'
+          });
           setTimeout(() => this.router.navigate(['/admin/discounts']), 2000);
         },
         error: (error: HttpErrorResponse) => {

@@ -188,16 +188,27 @@ export class ProductDetailsComponent implements OnInit {
     });
   }
 
-  onQuantityChange(event: Event): void {
-    const inputElement = event.target as HTMLInputElement;
-    let value = parseInt(inputElement.value, 10);
-    if (isNaN(value) || value < 1) {
-      value = 1;
-      inputElement.value = '1';
-    } else if (this.product && value > this.product.stockQuantity) {
-      value = this.product.stockQuantity;
-      inputElement.value = value.toString();
-    }
-    this.quantity = value;
+ onQuantityChange(event: Event): void {
+  const inputElement = event.target as HTMLInputElement;
+  let value = parseInt(inputElement.value, 10);
+
+  // Handle invalid or negative values
+  if (isNaN(value) || value < 0) {
+    value = 1;
+    inputElement.value = '1';
   }
+  // If user enters 0, default to 1 on update
+  else if (value === 0) {
+    value = 1;
+    inputElement.value = '1';
+  }
+  // Cap value to available stock
+  else if (this.product && value > this.product.stockQuantity) {
+    value = this.product.stockQuantity;
+    inputElement.value = value.toString();
+  }
+
+  this.quantity = value;
+}
+
 }

@@ -115,35 +115,56 @@
                       >
                     </li>
                   </ul>
-                  <div class="d-flex justify-content-end mt-3">
-                    <button
-                      class="btn btn-outline-primary btn-sm me-2"
-                      (click)="viewOrderDetails(order.id)"
-                    >
-                      View Full Details
-                    </button>
-                    <!-- Show Download Invoice button only if status is PAID or DELIVERED -->
-                    <button
-                      *ngIf="order.status === 'PAID' || order.status === 'DELIVERED'"
-                      class="btn btn-success btn-sm"
-                      [disabled]="invoiceStatus.downloadingId === order.id"
-                      (click)="downloadInvoice(order.id)"
-                    >
-                      <span
-                        *ngIf="invoiceStatus.downloadingId === order.id"
-                        class="spinner-border spinner-border-sm me-2"
-                        role="status"
-                        aria-hidden="true"
-                      ></span>
-                      <span *ngIf="invoiceStatus.downloadingId !== order.id">
-                        <i class="bi bi-download me-1"></i>
-                        Download Invoice
-                      </span>
-                      <span *ngIf="invoiceStatus.downloadingId === order.id">
-                        Downloading...
-                      </span>
-                    </button>
-                  </div>
+
+
+<div class="d-flex justify-content-end mt-3">
+  <button
+    class="btn btn-outline-primary btn-sm me-2 d-flex align-items-center"
+    (click)="toggleTracking(order.id!)"
+  >
+    <i class="bi" [ngClass]="activeTrackingId === order.id ? 'bi-x-circle' : 'bi-truck'"></i>
+    <span class="ms-1">{{ activeTrackingId === order.id ? 'Close Tracker' : 'Track Order' }}</span>
+  </button>
+
+  <button
+    *ngIf="order.status === 'PAID' || order.status === 'DELIVERED'"
+    class="btn btn-success btn-sm"
+    [disabled]="invoiceStatus.downloadingId === order.id"
+    (click)="downloadInvoice(order.id!)"
+  >
+    Download Invoice
+  </button>
+</div>
+
+<div *ngIf="activeTrackingId === order.id" class="tracking-container mt-4 p-4 border rounded bg-light shadow-sm">
+  <h6 class="fw-bold mb-4 text-center">
+    <i class="bi bi-geo-alt-fill text-primary me-2"></i>Order Journey
+  </h6>
+  
+  <div class="track">
+    <div class="step" [ngClass]="{'active': getStatusStep(order.status) >= 15}">
+      <span class="icon"><i class="bi bi-cart-check"></i></span>
+      <span class="text">Placed</span>
+    </div>
+    <div class="step" [ngClass]="{'active': getStatusStep(order.status) >= 45}">
+      <span class="icon"><i class="bi bi-gear"></i></span>
+      <span class="text">Processing</span>
+    </div>
+    <div class="step" [ngClass]="{'active': getStatusStep(order.status) >= 75}">
+      <span class="icon"><i class="bi bi-box-seam"></i></span>
+      <span class="text">Shipped</span>
+    </div>
+    <div class="step" [ngClass]="{'active': getStatusStep(order.status) >= 100}">
+      <span class="icon"><i class="bi bi-house-check"></i></span>
+      <span class="text">Delivered</span>
+    </div>
+  </div>
+
+  <div *ngIf="order.status === 'CANCELLED' || order.status === 'RETURNED'" class="alert alert-danger mt-4 mb-0 py-2 text-center">
+    <i class="bi bi-exclamation-triangle-fill me-2"></i>
+    This order has been <strong>{{ order.status }}</strong>.
+  </div>
+</div>
                 </div>
               </div>
             </div>
