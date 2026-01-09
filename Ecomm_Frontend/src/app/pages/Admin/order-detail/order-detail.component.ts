@@ -101,7 +101,11 @@ export class OrderDetailComponent {
         this.router.navigate(['/admin/orders']); 
       },
       error: (err: HttpErrorResponse) => {
-        this.error = 'Failed to update order.';
+        Swal.fire({
+        icon:"error",
+        title:"oops..",
+        text:"Order Status cannot be updated After Delivered Or Cancelled..."
+      });
         this.submitting = false;
         console.error('AdminOrderDetailComponent: Error updating order:', err);
         if (err.error && err.error.message) {

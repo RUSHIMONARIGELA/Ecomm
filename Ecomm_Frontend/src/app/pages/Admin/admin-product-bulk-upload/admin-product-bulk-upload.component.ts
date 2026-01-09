@@ -47,7 +47,6 @@ export class AdminProductBulkUploadComponent implements OnInit {
             title:"oops..",
             text:"Failed to load categories. Check console for details."
           });
-          // this.errorMessage = 'Failed to load categories. Check console for details.'; 
         }
       }
     );
@@ -65,65 +64,73 @@ export class AdminProductBulkUploadComponent implements OnInit {
   }
 
   onUpload(): void {
-    if (!this.selectedFile) {
-
-      Swal.fire({
-        icon:"error",
-        title:"oops..",
-        text:"Please select a CSV file to upload."
-      });
-      // this.errorMessage = 'Please select a CSV file to upload.';
-      return;
-    }
-    if (this.selectedFile.type !== 'text/csv' && !this.selectedFile.name.endsWith('.csv')) {
-
-      Swal.fire({
-        icon:"error",
-        title:"oops..",
-        text:"Invalid file type. Please select a CSV File."
-      });
-      // this.errorMessage = 'Invalid file type. Please select a CSV File.'; 
-      this.selectedFile = null;
-      return;
-    }
-
-    this.loading = true;
-    this.errorMessage = null;
-    this.successMessage = null;
-
-    const formData = new FormData();
-    formData.append('file', this.selectedFile, this.selectedFile.name);
-
-    this.productService.uploadProductsCsv(formData).subscribe({
-      next: (response: string) => { 
-        this.successMessage = response; 
-        this.loading = false;
-        this.selectedFile = null;
-        setTimeout(() => {
-          this.router.navigate(['/admin/products']);
-        }, 3000);
-      },
-      error: (error: HttpErrorResponse) => {
-        this.loading = false;
-        console.error('Bulk upload failed', error);
-
-        if (error.error && typeof error.error === 'string') {
-          this.errorMessage = `Upload failed: ${error.error}`;
-        } else if (error.error && error.error.message) {
-          this.errorMessage = `Upload failed: ${error.error.message}`;
-        } else {
-
-          Swal.fire({
-            icon:"error",
-            title:"oops..",
-            text:"An unknown error occurred during upload. Check console for details."
-          });
-          // this.errorMessage = 'An unknown error occurred during upload. Check console for details.';
-        }
-      }
+  if (!this.selectedFile) {
+    Swal.fire({
+      icon: "error",
+      title: "Oops..",
+      text: "Please select a CSV file to upload."
     });
+    return;
   }
 
+  if (this.selectedFile.type !== 'text/csv' && !this.selectedFile.name.endsWith('.csv')) {
+    Swal.fire({
+      icon: "error",
+      title: "Oops..",
+      text: "Invalid file type. Please select a CSV File."
+    });
+    this.selectedFile = null;
+    return;
+  }
+
+  this.loading = true;
+  this.errorMessage = null;
+  this.successMessage = null;
+
+  const formData = new FormData();
+  formData.append('file', this.selectedFile, this.selectedFile.name);
+
+  // Note: response is now an object, not a string
+  this.productService.uploadProductsCsv(formData).subscribe({
+    next: (response: any) => {
+      this.loading = false;
+      this.selectedFile = null;
+      
+      // Use the structured message from the backend
+      this.successMessage = response.message;
+
+      Swal.fire({
+        icon: "success",
+        title: "Upload Started",
+        html: `
+          <p>${response.message}</p>
+          <p class="text-muted small">Batch ID: ${response.batchId}</p>
+        `,
+        timer: 4000,
+        showConfirmButton: false
+      });
+
+      setTimeout(() => {
+        this.router.navigate(['/admin/products']);
+      }, 4000);
+    },
+    error: (error: HttpErrorResponse) => {
+      this.loading = false;
+      console.error('Bulk upload failed', error);
+
+      // Extract error message from the JSON error body
+      const errorMsg = error.error?.message || "An unknown error occurred during upload.";
+      
+      this.errorMessage = `Upload failed: ${errorMsg}`;
+
+      Swal.fire({
+        icon: "error",
+        title: "Upload Failed",
+        text: errorMsg
+      });
+    }
+  });
+}
   get categoryNames(): string {
     return this.categories.map(cat => cat.name).join(', ');
   }

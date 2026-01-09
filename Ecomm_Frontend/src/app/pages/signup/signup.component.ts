@@ -1,151 +1,139 @@
-import { Component, inject } from '@angular/core';
+import { Component, inject, signal, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { ReactiveFormsModule, FormsModule } from '@angular/forms';
+import { ReactiveFormsModule, FormGroup, FormBuilder, AbstractControl, Validators } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { HttpClientModule, HttpErrorResponse } from '@angular/common/http';
 import { AuthService } from '../../services/auth.service';
-import { CustomerService } from '../../services/customer.service';
 import { CustomerDTO } from '../../models/customer-models';
-import Swal from 'sweetalert2';
-import { getFriendlyError } from '../../utils/error-utils';
 
 @Component({
   selector: 'app-signup',
   standalone: true,
-  imports: [
-    CommonModule,
-    ReactiveFormsModule,
-    HttpClientModule,
-    RouterLink,
-    FormsModule,
-  ],
+  imports: [CommonModule, ReactiveFormsModule, HttpClientModule],
   templateUrl: './signup.component.html',
   styleUrls: ['./signup.component.css'],
 })
-export class SignupComponent {
-  customerRegistration: CustomerDTO = {
-    userDetails: {
-      username: '',
-      email: '',
-      password: '',
-    },
-    profileDetails: {
-      firstName: '',
-      lastName: '',
-      phoneNumber: '',
-      addresses: [        {
-          street: '',
-          city: '',
-          state: '',
-          postalCode: '',
-          country: '',
-          type: 'SHIPPING',
-        },
-      ],
-    },
-  };
-
-  confirmPassword = '';
-  errorMessage: string | null = null;
-  successMessage: string | null = null;
-  loading = false;
-
-  private authService = inject(AuthService);
-  private customerService = inject(CustomerService);
+export class SignupComponent implements OnInit {
+  private fb = inject(FormBuilder);
   private router = inject(Router);
+  private authService = inject(AuthService);
 
-  constructor() {}
+  signupForm!: FormGroup;
+  loading = signal(false);
+  errorMessage = signal<string | null>(null);
+  
+  passwordStrength = signal(0);
+  passwordStrengthLabel = signal('');
+  passwordStrengthColor = signal('bg-danger');
+
+  // Form Getters
+  get userF(): { [key: string]: AbstractControl } {
+    return (this.signupForm.get('userDetails') as FormGroup).controls;
+  }
+  get profileF(): { [key: string]: AbstractControl } {
+    return (this.signupForm.get('profileDetails') as FormGroup).controls;
+  }
+  get addrF(): { [key: string]: AbstractControl } {
+    return (this.signupForm.get('profileDetails.address') as FormGroup).controls;
+  }
 
   ngOnInit(): void {
-    if (this.authService.isLoggedIn()) {
-      this.router.navigate(['/home']);
-    }
+    this.initForm();
+    this.signupForm.get('userDetails.password')?.valueChanges.subscribe(val => this.calculatePasswordStrength(val));
+  }
+
+  private initForm() {
+    this.signupForm = this.fb.group({
+      userDetails: this.fb.group({
+        username: ['', [Validators.required, Validators.minLength(3)]],
+        email: ['', [Validators.required, Validators.email]],
+        password: ['', [Validators.required, Validators.minLength(6)]],
+        confirmPassword: ['', [Validators.required]],
+        phoneNumber: ['', [Validators.required, Validators.pattern('^\\+?[0-9]{10,15}$')]]
+      }, { validators: this.passwordMatchValidator }),
+      
+      profileDetails: this.fb.group({
+        firstName: ['', Validators.required],
+        lastName: ['', Validators.required],
+        address: this.fb.group({
+          street: ['', Validators.required],
+          city: ['', Validators.required],
+          state: ['', Validators.required],
+          postalCode: ['', Validators.required],
+          country: ['', Validators.required], // Ensure this matches HTML
+          type: ['SHIPPING']
+        })
+      })
+    });
+  }
+
+  passwordMatchValidator(g: FormGroup) {
+    const password = g.get('password')?.value;
+    const confirm = g.get('confirmPassword')?.value;
+    return password === confirm ? null : { mismatch: true };
   }
 
   onSignup(): void {
-    this.errorMessage = null;
-    this.successMessage = null;
-
-    const userDetails = this.customerRegistration.userDetails;
-    const profileDetails = this.customerRegistration.profileDetails;
-    const primaryAddress = profileDetails?.addresses?.[0];
-
- 
-    if(userDetails.username === '' || userDetails.username.length < 3){
-      this.errorMessage = 'Username should Not be Null ';
-      return;
-    }
-    if(userDetails.email ==='' || userDetails.email === undefined){
-      this.errorMessage = 'Email is required Cannot be kept empty.';
-      return;
-    }
-    if(userDetails.password === ''){
-      this.errorMessage = 'Password is required.';
-      return;
-    }
-    
-    if (userDetails.password !== this.confirmPassword) {
-      this.errorMessage = 'Passwords do not match.';
-      return;
-    }
-    if(profileDetails?.firstName === ''){
-      this.errorMessage = 'Firstname is required ';
-      return;
-    }
-    if(profileDetails?.lastName === ''){
-      this.errorMessage = 'Lastname is required.';
-      return;
-    }
-    if(profileDetails?.phoneNumber === ''){
-      this.errorMessage = 'Phonenumber is required.';
-      return;
-    }
-    if(primaryAddress?.street === ''){
-      this.errorMessage = 'Street Address is required.';
-      return;
-    }
-    if(primaryAddress?.city === '') {
-      this.errorMessage = 'City Cannot be empty';
-      return;
-    }
-    if(primaryAddress?.country === '') {
-      this.errorMessage = 'Country cannot be empty.';
-      return;
-    }
-    if(primaryAddress?.postalCode === ''){
-      this.errorMessage = 'Postal code cannot be empty';
-      return;
-    }
-    if(primaryAddress?.state === ''){
-      this.errorMessage = 'State  field cannot be empty';
+    // DEBUG: If the button "does nothing", check your browser console (F12)
+    if (this.signupForm.invalid) {
+      this.signupForm.markAllAsTouched();
+      console.error("Form is invalid. Check these fields:", this.findInvalidControls());
       return;
     }
 
+    this.loading.set(true);
+    this.errorMessage.set(null);
 
-    this.loading = true;
+    const formVal = this.signupForm.getRawValue();
+    const payload: CustomerDTO = {
+      userDetails: {
+        username: formVal.userDetails.username,
+        email: formVal.userDetails.email,
+        password: formVal.userDetails.password,
+        phoneNumber: formVal.userDetails.phoneNumber
+      },
+      profileDetails: {
+        firstName: formVal.profileDetails.firstName,
+        lastName: formVal.profileDetails.lastName,
+        phoneNumber: formVal.userDetails.phoneNumber,
+        addresses: [formVal.profileDetails.address]
+      }
+    };
 
-    this.customerService
-      .registerFullCustomer(this.customerRegistration)
-      .subscribe({
-        next: (response) => {
+    this.authService.registerCustomer(payload).subscribe({
+      next: () => {
+        this.loading.set(false);
+        this.router.navigate(['/login']);
+      },
+      error: (error: HttpErrorResponse) => {
+        this.loading.set(false);
+        this.errorMessage.set(error.error?.message || "Registration failed.");
+      }
+    });
+  }
 
-          Swal.fire({
-  title: "Good job!",
-  text: "Registration successful! You can now login..",
-  icon: "success"
-});
-          this.loading = false;
-          this.router.navigate(['/login']);
-        },
-        error: (error: any) => {
-          this.loading = false;
-          console.error('Full signup failed:', error);
-          if (error?.status === 409) {
-            this.errorMessage = 'Username or email already exists. Please choose another.';
-          } else {
-            this.errorMessage = getFriendlyError(error, 'Registration failed. Please try again later.');
-          }
-        },
-      });
+  // Helper to find why the form is stuck
+  private findInvalidControls() {
+    const invalid = [];
+    const controls = this.signupForm.controls;
+    for (const name in controls) {
+      if (controls[name].invalid) invalid.push(name);
+    }
+    return invalid;
+  }
+
+  calculatePasswordStrength(pass: string) {
+    let score = 0;
+    if (!pass) { this.passwordStrength.set(0); return; }
+    if (pass.length > 6) score += 20;
+    if (/[A-Z]/.test(pass)) score += 40;
+    if (/[0-9]/.test(pass)) score += 40;
+    this.passwordStrength.set(score);
+    this.passwordStrengthLabel.set(score > 60 ? 'Strong' : 'Weak');
+    this.passwordStrengthColor.set(score > 60 ? 'bg-success' : 'bg-danger');
+  }
+
+  getLabelTextColor() {
+    return this.passwordStrengthColor() === 'bg-success' ? 'text-success' : 'text-danger';
   }
 }

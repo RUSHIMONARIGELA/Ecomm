@@ -70,7 +70,7 @@ export class ProfileComponent implements OnInit {
               },
             ];
           }
-          // Swal.fire("Existing profile loaded..");
+
         },
         error: (error: any) => {
           if (error?.status === 404) {

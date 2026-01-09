@@ -49,17 +49,17 @@ export class AdminProductListComponent {
   }
 
   applyPagination(): void {
-    const filtered = this.searchQuery
+    const q = this.searchQuery?.trim().toLowerCase() || '';
+    const filtered = q
       ? this.products.filter((p) =>
-          p.name.toLowerCase().includes(this.searchQuery.toLowerCase())
+          (p.name && p.name.toLowerCase().includes(q)) ||
+          (p.categoryName && p.categoryName.toLowerCase().includes(q))
         )
-      : this.products;
+      : this.products.slice();
 
-    this.totalPages = Math.ceil(filtered.length / this.pageSize);
-    if (this.currentPage > this.totalPages && this.totalPages > 0) {
+    this.totalPages = Math.max(1, Math.ceil(filtered.length / this.pageSize));
+    if (this.currentPage > this.totalPages) {
       this.currentPage = this.totalPages;
-    } else if (this.totalPages === 0) {
-      this.currentPage = 1;
     }
 
     const start = (this.currentPage - 1) * this.pageSize;

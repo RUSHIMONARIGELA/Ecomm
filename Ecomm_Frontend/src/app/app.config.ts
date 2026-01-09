@@ -3,15 +3,15 @@ import { provideRouter } from '@angular/router';
 
 import { routes } from './app.routes';
 import { provideHttpClient, withInterceptors } from '@angular/common/http';
-import { jwtInterceptorInterceptor } from './interceptor/jwt-interceptor.interceptor';
 import { registerLocaleData } from '@angular/common';
 import localeIn from '@angular/common/locales/en-IN';
+import { jwtInterceptor } from './interceptor/jwt-interceptor.interceptor';
 registerLocaleData(localeIn);
 
 export const appConfig: ApplicationConfig = {
   providers: [
     provideZoneChangeDetection({ eventCoalescing: true }),
-    provideHttpClient(withInterceptors([jwtInterceptorInterceptor])),
+    provideHttpClient(withInterceptors([jwtInterceptor])),
     provideRouter(routes),
     { provide: LOCALE_ID, useValue: 'en-IN' }
   

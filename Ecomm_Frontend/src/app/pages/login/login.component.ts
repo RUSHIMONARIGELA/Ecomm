@@ -13,98 +13,84 @@ import Swal from 'sweetalert2';
   styleUrls: ['./login.component.css'],
 })
 export class LoginComponent {
-  username = '';
+  identifier = ''; 
   password = '';
   twoFactorCode = '';
+  newPhoneNumber = ''; 
+  
   error = '';
   twoFactorAuthRequired = false;
+  profileIncomplete = false; 
   twoFactorMessage = '';
+  showPassword = false;
+
   private authService = inject(AuthService);
   private router = inject(Router);
 
-  constructor() {}
+  togglePasswordVisibility(): void {
+    this.showPassword = !this.showPassword;
+  }
 
   onSubmit(): void {
     this.error = '';
-    this.twoFactorMessage = '';
-
     this.authService
-      .login({ username: this.username, password: this.password })
+      .login({ identifier: this.identifier, password: this.password })
       .subscribe({
         next: (response: HttpResponse<any>) => {
           if (response.status === 202) {
             this.twoFactorAuthRequired = true;
-            this.twoFactorMessage =
-              response.body?.message ||
-              'A 2FA code has been sent to your email.';
-            console.log(
-              'LoginComponent: 2FA required. Message:',
-              this.twoFactorMessage
-            );
+            this.twoFactorMessage = response.body?.message || '2FA code sent to email.';
+          } else if (response.body?.profileIncomplete) {
+            this.profileIncomplete = true;
           } else if (response.status === 200) {
             this.handleSuccessfulLogin();
           }
         },
         error: (err: HttpErrorResponse) => {
-          console.error('LoginComponent: Login error:', err);
-          this.error = err.error?.message || 'Invalid username or password.';
-          this.twoFactorAuthRequired = false;
-          this.authService.clearPending2FaUsername();
+          this.error = err.error?.message || 'Invalid phone number or password.';
         },
       });
   }
 
+  onCompleteProfile(): void {
+    const username = this.authService.getTempUsername();
+    if (!username) return;
+
+    this.authService.linkPhoneNumber(username, this.newPhoneNumber).subscribe({
+      next: () => {
+        // Replacing Swal with standard UI interaction or simpler alert
+        console.log('Phone number linked successfully');
+        this.profileIncomplete = false;
+        this.identifier = this.newPhoneNumber;
+        this.error = 'Phone number linked! Please login again.';
+      },
+      error: (err) => {
+        this.error = err.error?.message || 'Could not link phone number.';
+      }
+    });
+  }
+
   onVerify2FACode(): void {
-    this.error = '';
-    this.twoFactorMessage = '';
+    const username = this.authService.getPending2FaUsername();
+    if (!username) return;
 
-    const usernameFor2FA = this.authService.getPending2FaUsername();
-    if (!usernameFor2FA) {
-      this.error = 'No pending 2FA session. Please log in again.';
-      this.twoFactorAuthRequired = false;
-      return;
-    }
-
-    this.authService
-      .verify2FACode(usernameFor2FA, this.twoFactorCode)
-      .subscribe({
-        next: (response) => {
-          console.log('LoginComponent: 2FA verification successful.');
-          this.handleSuccessfulLogin();
-        },
-        error: (err: HttpErrorResponse) => {
-          console.error('LoginComponent: 2FA verification error:', err);
-          this.error = err.error?.message || 'Invalid or expired 2FA code.';
-        },
-      });
+    this.authService.verify2FACode(username, this.twoFactorCode).subscribe({
+      next: () => this.handleSuccessfulLogin(),
+      error: (err) => this.error = 'Invalid 2FA code.'
+    });
   }
 
   private handleSuccessfulLogin(): void {
     const role = this.authService.getUserRoleForDisplay();
-    if (role === 'SUPER_ADMIN') {
+    if (role === 'ADMIN' || role === 'SUPER_ADMIN') {
       this.router.navigate(['/admin']);
-    } else if (role === 'ADMIN') {
-      this.router.navigate(['/admin']);
-    } else if (role === 'CUSTOMER') {
-      Swal.fire({
-        title: 'Authentication!',
-        text: 'You have successfully logged in!',
-        icon: 'success',
-      });
-      this.router.navigate(['/home']);
     } else {
-      this.error = 'Unknown role or no role assigned. Please contact support.';
-      this.authService.logout();
+      this.router.navigate(['/home']);
     }
-    this.twoFactorAuthRequired = false;
-    this.authService.clearPending2FaUsername();
   }
 
-  cancel2FA(): void {
-    this.twoFactorAuthRequired = false;
-    this.twoFactorCode = '';
-    this.error = '';
-    this.twoFactorMessage = '';
-    this.authService.clearPending2FaUsername();
+  cancelMigration(): void {
+    this.profileIncomplete = false;
+    this.authService.logout();
   }
 }

@@ -20,6 +20,7 @@ export class OrdersComponent implements OnInit {
 orders: OrderDTO[] = [];
   loadingOrders = true;
   ordersError: string | null = null;
+  activeTrackingId: number | null = null;
   
   invoiceStatus = {
     downloadingId: null as number | null,
@@ -125,4 +126,18 @@ orders: OrderDTO[] = [];
       }
     });
   }
+  getStatusStep(status: string): number {
+  switch (status) {
+    case 'PENDING': return 25;
+    case 'PAID':    return 50;
+    case 'SHIPPED': return 75;
+    case 'DELIVERED': return 100;
+    default: return 0; // For CANCELLED or others
+  }
+}
+toggleTracking(orderId: number) {
+  this.activeTrackingId = this.activeTrackingId === orderId ? null : orderId;
+}
+
+
 }

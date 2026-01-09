@@ -4,12 +4,12 @@
 
 .card {
   border: none;
-  box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15) !important;
+  box-shadow: 1px  rgba(19, 17, 17, 0.15) !important;
 }
 
 .card-header {
   background-color: #007bff; 
-  color: white;
+  color: rgb(131, 127, 127);
   border-bottom: none;
 }
 
